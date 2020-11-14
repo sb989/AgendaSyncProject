@@ -21,14 +21,12 @@ Django==2.0.2
 dnspython==1.16.0
 docutils==0.15.2
 Equation==1.2.1
-eventlet==0.28.0
 eventlet==0.29.1
 Flask==1.1.2
 Flask-SocketIO==4.3.1
 Flask-SQLAlchemy==2.1
 fuzzywuzzy==0.18.0
 git-remote-codecommit==1.15.1
-google-api-core==1.22.4
 google-api-core==1.23.0
 google-api-python-client==1.12.5
 google-auth==1.23.0
