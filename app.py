@@ -242,7 +242,7 @@ def get_all_todos(data):
         due_dates.append(str(todo.due_date))
 
     message = {"Todos": todos, "start_todos": start_todos, "due_dates": due_dates}
-    SOCKET_IO.emit("sending todo info", message)
+    flask_socketio.emit("sending todo info", message)
     print(message)
 
 
@@ -300,7 +300,7 @@ def login(data):
     login_user = "https://calendar.google.com/calendar/embed?src={}&ctz=America%2FNew_York".format(
         user_email
     )
-    SOCKET_IO.emit("googleCalendar", {"url": login_user, "email": user_email})
+    flask_socketio.emit("googleCalendar", {"url": login_user, "email": user_email})
     calendar_id = result["items"][0]["id"]
 
     result = service.events().list(calendarId=calendar_id).execute()
@@ -309,12 +309,12 @@ def login(data):
 
     if user_email not in get_all_emails():
         add_new_person_to_db(user_email, cred)
-        SOCKET_IO.emit("getPhoneNumber")
+        flask_socketio.emit("getPhoneNumber")
     else:
         print(f"user {user_email} exists")
         update_tokens_in_db(user_email, cred)
 
-    SOCKET_IO.emit("connected", {"calendarUpdate": result["items"]})
+    flask_socketio.emit("connected", {"calendarUpdate": result["items"]})
 
 
 @SOCKET_IO.on("receivePhoneNumber")
@@ -329,7 +329,7 @@ def recieve_phone_number(data):
     print(phone)
     person.phone = phone
     DB.session.commit()
-    SOCKET_IO.emit("Server has phone number")
+    flask_socketio.emit("Server has phone number")
 
 
 @SOCKET_IO.on("login with email")
@@ -341,7 +341,7 @@ def login_with_email(data):
     login_user = "https://calendar.google.com/calendar/embed?src={}&ctz=America%2FNew_York".format(
         email
     )
-    SOCKET_IO.emit("googleCalendar", {"url": login_user, "email": user_email})
+    flask_socketio.emit("googleCalendar", {"url": login_user, "email": user_email})
     person = get_person_object(user_email)
     cred = person.cred
     print(cred)
