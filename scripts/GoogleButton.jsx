@@ -9,9 +9,22 @@ export default function GoogleButton(params) {
   // console.log(clientId);
   function success(response) {
     const { code } = response;
+    var month = new Date();
+    var startMonth = new Date(month.getFullYear(),month.getMonth()-1,1,0,0,0,0);//
+    var endMonth = new Date(startMonth.getFullYear(), month.getMonth() + 2, 0,23,59,59,999); 
+
+    console.log(startMonth);
+    console.log(endMonth);
+    startMonth = startMonth.toISOString();
+    console.log(startMonth);
+    
+    endMonth = endMonth.toISOString();
+    console.log(endMonth);
     if (code !== undefined) {
       Socket.emit('login with code', {
         code,
+        startMonth,
+        endMonth,
       });
     } else {
       const { email } = response.profileObj;
@@ -19,6 +32,8 @@ export default function GoogleButton(params) {
       Socket.emit('login with email',
         {
           email,
+          startMonth,
+          endMonth,
         });// after login; every page refresh rerturns profile instead
     }
     params.setAuthenticated(true);

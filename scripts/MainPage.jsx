@@ -8,7 +8,6 @@ import Socket from './Socket';
 import PhoneNumberForm from './PhoneNumberForm';
 
 export default function MainPage(params) {
-  const { userURL } = params;
   //   const { name } = params;
   const { email } = params;
   const { setAuthenticated } = params;
@@ -21,9 +20,8 @@ export default function MainPage(params) {
 
   function setUpDefaultLook() {
     React.useEffect(() => {
-      if (userURL === '') return;
-      setSelected(React.createElement(UserCalendar, { userURL }));
-    }, [userURL]);
+      setSelected(React.createElement(UserCalendar, { }));
+    },[]);
   }
 
   function getPhoneNumber() {
@@ -32,7 +30,6 @@ export default function MainPage(params) {
         // console.log('getPhoneNumber');
         setSelected(React.createElement(PhoneNumberForm, {
           setSelected,
-          userURL,
           setUpDefaultLook,
           email,
         }));
@@ -43,9 +40,9 @@ export default function MainPage(params) {
   function removePhoneForm() {
     React.useEffect(() => {
       Socket.on('Server has phone number', () => {
-        setSelected(React.createElement(UserCalendar, { userURL }));
+        setSelected(React.createElement(UserCalendar, {  }));
       });
-    }, [userURL]);
+    });
   }
 
   setUpDefaultLook();
@@ -66,7 +63,6 @@ export default function MainPage(params) {
       <br />
       <CalendarButton
         setSelected={setSelected}
-        userURL={userURL}
       />
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;

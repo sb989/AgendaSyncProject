@@ -268,6 +268,9 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
 @SOCKET_IO.on("login with code")
 def login(data):
     ''' On client login, authorize/store google auth token then emit google calendar information '''
+    start_month = data["startMonth"]
+    end_month = data["endMonth"]
+    auth_code = data["code"]
     auth_code = data["code"]
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         "client_secret.json",
@@ -285,7 +288,7 @@ def login(data):
     cred = flow.credentials
 
     service = build("calendar", "v3", credentials=cred)
-    result = service.calendarList().list().execute()
+    # result = service.calendarList().list().execute()
 
     profileurl = (
         "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token={}".format(
@@ -297,15 +300,11 @@ def login(data):
 
     user_email = profile["email"]
 
-    login_user = "https://calendar.google.com/calendar/embed?src={}&ctz=America%2FNew_York".format(
-        user_email
-    )
-    flask_socketio.emit("googleCalendar", {"url": login_user, "email": user_email})
-    calendar_id = result["items"][0]["id"]
+    result = service.events().list(calendarId="primary", timeMin=start_month, timeMax=end_month, singleEvents=True, orderBy="startTime").execute()
+    result = seperate_events_by_month(result["items"],start_month,end_month)
 
-    result = service.events().list(calendarId=calendar_id).execute()
-    # get_all_todos()
-    # print(result['items'])
+    flask_socketio.emit("email", {"email": user_email})
+    flask_socketio.emit("calendarInfo",{"events":result})
 
     if user_email not in get_all_emails():
         add_new_person_to_db(user_email, cred)
@@ -316,6 +315,65 @@ def login(data):
 
     flask_socketio.emit("connected", {"calendarUpdate": result["items"]})
 
+@SOCKET_IO.on("login with email")
+def login_with_email(data):
+    ''' On client email login, retrieve email and update credentials before calendar emit '''
+    start_month = data["startMonth"]
+    end_month = data["endMonth"]
+    email = data["email"]
+    print(data)
+    user_email = email
+    print(email)
+    
+    person = get_person_object(user_email)
+    cred = person.cred
+    print(cred)
+    print(cred.token)
+    service = build("calendar", "v3", credentials=cred)
+    result = service.events().list(calendarId="primary", timeMin=start_month, timeMax=end_month, singleEvents=True, orderBy="startTime").execute()
+    result = seperate_events_by_month(result["items"], start_month, end_month)
+    flask_socketio.emit("email", {"email": user_email})
+    flask_socketio.emit("calendarInfo",{"events":result})
+    # get_all_todos()
+
+def seperate_events_by_month(events, start_month_date, end_month_date):
+    sorted_events = {}
+    start_datetime = parser.isoparse(start_month_date)
+    end_datetime = parser.isoparse(end_month_date)
+    start_month = start_datetime.month
+    end_month = end_datetime.month
+    if end_month < start_month:
+        for i in range(start_month-1,12):
+            sorted_events[str(i)] = []
+        for i in range(0,end_month):
+            sorted_events[str(i)] = []
+    else:
+        for i in range(start_month-1,end_month):
+            print(i)
+            sorted_events[str(i)] = []
+    print(start_month)
+    print(end_month)
+    for event in events:
+        
+        if "dateTime" in event["start"] and "dateTime" in event["end"]:
+            month = event["start"]["dateTime"]
+            end = event["end"]["dateTime"]
+        elif "date" in event["start"] and "date" in event["end"]:
+            month = event["start"]["date"]
+            end = event["end"]["date"]
+        start = month
+        summary = event["summary"]
+        html_link = event["htmlLink"]
+        month = parser.isoparse(month)
+        month = month.month
+        month = month-1
+        sorted_events[str(month)].append({
+            "start":start,
+            "end":end,
+            "summary":summary,
+            "html_link":html_link
+        })
+    return sorted_events
 
 @SOCKET_IO.on("receivePhoneNumber")
 def recieve_phone_number(data):
@@ -331,24 +389,6 @@ def recieve_phone_number(data):
     DB.session.commit()
     flask_socketio.emit("Server has phone number")
 
-
-@SOCKET_IO.on("login with email")
-def login_with_email(data):
-    ''' On client email login, retrieve email and update credentials before calendar emit '''
-    email = data["email"]
-    user_email = email
-    print(email)
-    login_user = "https://calendar.google.com/calendar/embed?src={}&ctz=America%2FNew_York".format(
-        email
-    )
-    flask_socketio.emit("googleCalendar", {"url": login_user, "email": user_email})
-    person = get_person_object(user_email)
-    cred = person.cred
-    print(cred)
-    print(cred.token)
-    # get_all_todos()
-
-
 @SOCKET_IO.on("addCalendarEvent")
 def add_calendar_event(data):
     ''' Retrieve calendar event from client, insert it into client's google calendar via API '''
@@ -360,6 +400,9 @@ def add_calendar_event(data):
             cred.refresh(Request())
             update_tokens_in_db(user_email, cred)
     print(data)
+    service = build("calendar", "v3", credentials=cred)
+    calendar = service.calendars.get("primary")
+    timeZone = calendar["timeZone"]
     title = data["title"]
     date = data["date"]
     event = {
@@ -368,17 +411,15 @@ def add_calendar_event(data):
         "description": "",
         "start": {
             "dateTime": date,
-            "timeZone": "America/New_York",
+            "timeZone": timeZone,
         },
         "end": {
             "dateTime": date,
-            "timeZone": "America/New_York",
+            "timeZone": timeZone,
         },
         "attendees": [],
         "reminders": {"useDefault": True},
     }
-
-    service = build("calendar", "v3", credentials=cred)
     event = service.events().insert(calendarId="primary", body=event).execute()
 
 

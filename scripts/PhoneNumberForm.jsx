@@ -5,10 +5,7 @@ import Socket from './Socket';
 export default function PhoneNumberForm(params) {
   const [phone, setPhone] = React.useState('');
   const [input, setInput] = React.useState('');
-//   const { setSelected } = params;
-//   const { userURL } = params;
   const { email } = params;
-//   const { setUpDefaultLook } = params;
   function newInp(curr) {
     setInput(curr.target.value);
   }

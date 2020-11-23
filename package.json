@@ -40,6 +40,7 @@
     "babel": "^6.23.0",
     "dotenv": "^8.2.0",
     "ngrok": "^3.3.0",
+    "react-calendar": "^3.2.1",
     "react-datepicker": "^3.3.0",
     "react-google-login": "^5.1.22",
     "reactjs-popup": "^2.0.4",

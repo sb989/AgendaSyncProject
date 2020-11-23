@@ -15,8 +15,7 @@ export function Content() {
 
   function getUserURL() {
     React.useEffect(() => {
-      Socket.on('googleCalendar', (data) => {
-        setUserURL(data.url);
+      Socket.on('email', (data) => {
         setEmail(data.email);
       });
     });
@@ -34,7 +33,6 @@ export function Content() {
           authenticated,
           name,
           email,
-          userURL,
         },
       );// placeholder for actual calendar page
     } else {
