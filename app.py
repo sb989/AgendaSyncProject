@@ -4,7 +4,7 @@ import os
 from os.path import join, dirname
 
 from dateutil import parser
-
+import calendar
 import flask
 import requests
 import flask_socketio
@@ -301,7 +301,7 @@ def login(data):
     user_email = profile["email"]
 
     result = service.events().list(calendarId="primary", timeMin=start_month, timeMax=end_month, singleEvents=True, orderBy="startTime").execute()
-    result = seperate_events_by_month(result["items"],start_month,end_month)
+    result = seperate_events_by_month(result["items"], start_month, end_month, result["timeZone"])
 
     flask_socketio.emit("email", {"email": user_email})
     flask_socketio.emit("calendarInfo",{"events":result})
@@ -331,30 +331,40 @@ def login_with_email(data):
     print(cred.token)
     service = build("calendar", "v3", credentials=cred)
     result = service.events().list(calendarId="primary", timeMin=start_month, timeMax=end_month, singleEvents=True, orderBy="startTime").execute()
-    result = seperate_events_by_month(result["items"], start_month, end_month)
+    result = seperate_events_by_month(result["items"], start_month, end_month, result["timeZone"])
     flask_socketio.emit("email", {"email": user_email})
     flask_socketio.emit("calendarInfo",{"events":result})
     # get_all_todos()
 
-def seperate_events_by_month(events, start_month_date, end_month_date):
+def seperate_events_by_month(events, start_month_date, end_month_date, time_zone):
     sorted_events = {}
+    sorted_events["timeZone"] = time_zone
     start_datetime = parser.isoparse(start_month_date)
     end_datetime = parser.isoparse(end_month_date)
     start_month = start_datetime.month
     end_month = end_datetime.month
+    year = start_datetime.year
     if end_month < start_month:
-        for i in range(start_month-1,12):
-            sorted_events[str(i)] = []
-        for i in range(0,end_month):
-            sorted_events[str(i)] = []
+        for i in range(start_month-1,12):#loops through the months leading to december
+            days_in_month = (calendar.monthrange(year,i+1))[1]
+            sorted_events[str(i)] = {}
+            for day in range(1,days_in_month+1):
+                sorted_events[str(i)][day] = [] #creates a dict entry for that day;it is a list
+        for i in range(0,end_month):# loops through january to the last month
+            days_in_month = (calendar.monthrange(year,i+1))[1]
+            sorted_events[str(i)] = {}
+            for day in range(1,days_in_month+1):
+                sorted_events[str(i)][day] = [] #creates a dict entry for that day;it is a list
+            
     else:
         for i in range(start_month-1,end_month):
-            print(i)
-            sorted_events[str(i)] = []
+            days_in_month = (calendar.monthrange(year,i+1))[1]
+            sorted_events[str(i)] = {}
+            for day in range(1,days_in_month+1):
+                sorted_events[str(i)][day] = [] #creates a dict entry for that day;it is a list
     print(start_month)
     print(end_month)
     for event in events:
-        
         if "dateTime" in event["start"] and "dateTime" in event["end"]:
             month = event["start"]["dateTime"]
             end = event["end"]["dateTime"]
@@ -365,9 +375,10 @@ def seperate_events_by_month(events, start_month_date, end_month_date):
         summary = event["summary"]
         html_link = event["htmlLink"]
         month = parser.isoparse(month)
+        day = month.day
         month = month.month
         month = month-1
-        sorted_events[str(month)].append({
+        sorted_events[str(month)][day].append({
             "start":start,
             "end":end,
             "summary":summary,

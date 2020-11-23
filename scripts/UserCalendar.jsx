@@ -6,7 +6,35 @@ export default function UserCalendar(params) {
   const [value, onChange] = React.useState(new Date());
   const [calendarEvent,setCalendarEvent] = React.useState({});
   const [currentMonth,setCurrentMonth] = React.useState('');
-  
+  const { DateTime } = require("luxon");
+  function selectEventsForTile(data)
+  {
+    var date = data["date"];
+    var returnString = "";
+    //console.log(date);
+    var month = date.getMonth();
+    var day = date.getDate();
+    if (calendarEvent[month] == undefined || calendarEvent[month][day] == undefined)
+      return returnString;
+    var eventsForDay = calendarEvent[month][day];
+    console.log(day);
+    console.log(eventsForDay);
+    var event;
+    for (event of eventsForDay)
+    {
+      var start = event["start"];
+      var end = event["end"];
+      var summary = event["summary"];
+      start = DateTime.fromISO(start);
+      end = DateTime.fromISO(end);
+      var startTime = start.toLocaleString(DateTime.TIME_SIMPLE);
+      var endTime = end.toLocaleString(DateTime.TIME_SIMPLE);
+      var duration = startTime + "-" + endTime;
+      returnString += duration + ": "+summary;
+    }
+    return returnString;
+  }
+
   function addCalendarMonth()
   {
     React.useEffect(()=>{
@@ -17,7 +45,7 @@ export default function UserCalendar(params) {
           ce[month] = events;
           });
       });
-    });
+    },[]);
   }
   
   function deleteCalendarMonth()
@@ -29,7 +57,7 @@ export default function UserCalendar(params) {
           ce.delete(month);
           });
       });
-    });
+    },[]);
   }
   
   function changeMonth(data)
@@ -47,21 +75,22 @@ export default function UserCalendar(params) {
     React.useEffect(()=>{
       Socket.on("calendarInfo",(data)=>{
         var events = data["events"];
-        setCalendarEvent(events);
-        
-        console.log(events);
+        setCalendarEvent(events);  
+        console.log(events);      
       },[]);
     });
   }
  
   receiveCalendar();
+  addCalendarMonth();
+  deleteCalendarMonth();
   return (
   //<iframe title="calendar" src={userURL} style={{ border: '0' }} width="800" height="600" frameBorder="0" scrolling="no" />
   <div>
     <Calendar
       onChange={onChange}
       value={value}
-      tileContent="apple"
+      tileContent={selectEventsForTile}
       minDetail="month"
       onActiveStartDateChange={changeMonth}
     />
