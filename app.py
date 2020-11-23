@@ -97,18 +97,18 @@ def bot():
         add_new_todo_to_db(message_body, user_email)
         msg.body("Inserted: '" + message_body + "' into your todolist!")
         responded = True
-    # if DELETE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
-    #     delete_todo(int(incoming_msg[12:]))
-    #     msg.body("Deleting from your todolist!")
-    #     responded = True
-    # elif DELETE_TODO in incoming_msg:
-    #     msg.body("Please reply with a todo id to delete: 'delete todo id'\n")
-    #     msg.body(get_all_todos_values())
-    #     responded = True
+    if DELETE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
+        delete_todo(int(incoming_msg[12:]), user_email)
+        msg.body("Deleting from your todolist!")
+        responded = True
+    elif DELETE_TODO in incoming_msg:
+        msg.body("Please reply with a todo id to delete: 'delete todo id'\n")
+        msg.body(get_all_todos_values(user_email))
+        responded = True
 
     if LIST_TODO in incoming_msg:
         msg.body(
-            "Your todo listt contents are as follows: "
+            "Your todo list contents are as follows: "
             + get_all_todos_values(user_email)
         )
         responded = True
@@ -257,12 +257,11 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
     DB.session.commit()
 
 
-# def delete_todo(id):
-#     global user_email
-#     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
-#     todo_entry = DB.session.query(models.Todo).filter_by(id=id, person=some_person)
-#     DB.session.delete(todo_entry);
-#     DB.session.commit();
+def delete_todo(id, user_email):
+    some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
+    DB.session.query(models.Todo).filter_by(id=id, person=some_person).delete(synchronize_session='evaluate')
+    # DB.session.delete(todo_entry);
+    DB.session.commit();
 
 
 @SOCKET_IO.on("login with code")
@@ -399,7 +398,7 @@ def add_todo_list(data):
 
 
 if __name__ == "__main__":
-    # init_db(APP)
+    init_db(APP)
     SOCKET_IO.run(
         APP,
         host=os.getenv("IP", "0.0.0.0"),

@@ -48,7 +48,7 @@ export default function GoogleButton(params) {
     return (
       <GoogleLogin
         className="googleLoginButton"
-        clientId="30624731772-clsbuhec4ag6bukbqpsuf1qppc3g3n5r.apps.googleusercontent.com"
+        clientId={clientId}
         buttonText="Log in with Google"
         onSuccess={success}
         onFailure={failure}
@@ -66,7 +66,7 @@ export default function GoogleButton(params) {
     <GoogleLogout
       className="googleLogoutButton"
       isSignedIn={false}
-      clientId="30624731772-clsbuhec4ag6bukbqpsuf1qppc3g3n5r.apps.googleusercontent.com"
+      clientId={clientId}
       buttonText="Logout"
       onLogoutSuccess={logout}
       onFailure={failure}

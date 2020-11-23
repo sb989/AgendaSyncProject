@@ -21,8 +21,8 @@ class Todo(DB.Model):
     start_todo = DB.Column(DB.DateTime, default=start_date)
     due_date = DB.Column(DB.DateTime, default=end_date)
 
-#def createModels():
-#    ''' Initialize Person Table with ID/Email/Todos/Credentials Column '''
+def createModels():
+    ''' Initialize Person Table with ID/Email/Todos/Credentials Column '''
     
 DB.create_all()
     
