@@ -4,7 +4,11 @@ import datetime
 from app import DB
 
 start_date = datetime.datetime.utcnow()
+start_date_est = start_date - datetime.timedelta(seconds=18000) #-5 hours
+start_date_new = start_date_est.strftime('%m/%d/%Y %I:%M%p') #11/23/2020 05:48AM
 end_date = start_date + datetime.timedelta(days=1)
+end_date_est = end_date - datetime.timedelta(seconds=18000)
+end_date_new = end_date_est.strftime('%m/%d/%Y %I:%M%p')
 
 class Person(DB.Model):
     ''' Initialize Person Table with ID/Email/Todos/Credentials Columns '''
@@ -18,8 +22,8 @@ class Todo(DB.Model):
     id = DB.Column(DB.Integer, primary_key=True)
     person_id = DB.Column(DB.Integer, DB.ForeignKey('person.id'))
     todo = DB.Column(DB.String(255), nullable=False)
-    start_todo = DB.Column(DB.DateTime, default=start_date)
-    due_date = DB.Column(DB.DateTime, default=end_date)
+    start_todo = DB.Column(DB.DateTime, default=start_date_new)
+    due_date = DB.Column(DB.DateTime, default=end_date_new)
 
 def createModels():
     ''' Initialize Person Table with ID/Email/Todos/Credentials Column '''

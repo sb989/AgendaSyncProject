@@ -4,6 +4,10 @@ import os
 from os.path import join, dirname
 
 from dateutil import parser
+from dateutil import tz
+import datetime
+
+# from datetime import *
 
 import flask
 import requests
@@ -66,16 +70,25 @@ def hello():
 # ngrok http 5000
 
 ADD_TODO = "add todo"
+UPDATE_TODO = 'update todo'
 DELETE_TODO = "delete todo"
 LIST_TODO = "list todo"
-START_TODO = "start date"
+START_DATE = "start date"
 DUE_DATE = "due date"
 HELP_ME = "help me"
+ADD_CALENDAR = "add calendar"
+UPDATE_CALENDAR = "update calendar"
 
 
 @APP.route("/bot", methods=["POST"])
 def bot():
     ''' Initialize and run the bot from mobile inputs via Twilio '''
+    start_date = datetime.datetime.now()
+    start_date_est = start_date - datetime.timedelta(hours=5)
+    start_date_iso = start_date_est.isoformat()
+    end_date_est = start_date_est + datetime.timedelta(hours=1)
+    end_date_iso = end_date_est.isoformat()
+    
     incoming_msg = request.values.get("Body", "").lower()
     phone = request.form["From"]
     person = get_person_object_phone_number(phone)
@@ -83,12 +96,13 @@ def bot():
     resp = MessagingResponse()
     msg = resp.message()
     responded = False
+    
     if HELP_ME in incoming_msg:
         msg.body(
             "Hello! I'm the agendasync textbot!"
             + "My know commands are: 'add todo'"
             + ", 'delete todo, 'list todo'"
-            + ",'start date', and 'due date'"
+            + ",'start date', and 'due date', 'add calendar'"
         )
         responded = True
 
@@ -97,10 +111,12 @@ def bot():
         add_new_todo_to_db(message_body, user_email)
         msg.body("Inserted: '" + message_body + "' into your todolist!")
         responded = True
+        
     if DELETE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
         delete_todo(int(incoming_msg[12:]), user_email)
         msg.body("Deleting from your todolist!")
         responded = True
+        
     elif DELETE_TODO in incoming_msg:
         msg.body("Please reply with a todo id to delete: 'delete todo id'\n")
         msg.body(get_all_todos_values(user_email))
@@ -112,8 +128,15 @@ def bot():
             + get_all_todos_values(user_email)
         )
         responded = True
+        
+    if ADD_CALENDAR in incoming_msg:
+        message_body = incoming_msg[13:]
+        msg.body("Added " + message_body + " to your calender")
+        event = {'title': message_body, 'date': start_date_iso, 'email': user_email}
+        add_calendar_event(event)
+        responded = True
 
-    if START_TODO in incoming_msg:
+    if START_DATE in incoming_msg:
         message_body = incoming_msg[11:]
         # query for message_body in todolist table
         # if message_body not in table:
