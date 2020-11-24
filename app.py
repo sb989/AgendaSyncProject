@@ -2,9 +2,9 @@
 
 import os
 from os.path import join, dirname
-
-from dateutil import parser
 import calendar
+import datetime
+from dateutil import parser
 import flask
 import requests
 import flask_socketio
@@ -265,6 +265,7 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
 #     DB.session.commit();
 
 def get_cred_from_email(email):
+    '''returns cred based on email'''
     person = get_person_object(email)
     cred = person.cred
     return cred
@@ -290,8 +291,6 @@ def login(data):
 
     cred = flow.credentials
 
-    service = build("calendar", "v3", credentials=cred)
-    # result = service.calendarList().list().execute()
     profileurl = (
         "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token={}".format(
             cred.token
@@ -302,9 +301,7 @@ def login(data):
 
     user_email = profile["email"]
 
-    result = service.events().list(calendarId="primary", timeMin=start_month, timeMax=end_month, singleEvents=True, orderBy="startTime").execute()
-    result = seperate_events_by_month(result["items"], start_month, end_month, result["timeZone"])
-
+    result = create_update_all_message(cred, start_month, end_month)
     flask_socketio.emit("email", {"email": user_email})
     flask_socketio.emit("calendarInfo", {"events":result})
 
@@ -325,9 +322,7 @@ def login_with_email(data):
     user_email = email
     cred = get_cred_from_email(user_email)
 
-    service = build("calendar", "v3", credentials=cred)
-    result = service.events().list(calendarId="primary", timeMin=start_month, timeMax=end_month, singleEvents=True, orderBy="startTime").execute()
-    result = seperate_events_by_month(result["items"], start_month, end_month, result["timeZone"])
+    result = create_update_all_message(cred, start_month, end_month)
     flask_socketio.emit("email", {"email": user_email})
     flask_socketio.emit("calendarInfo", {"events":result})
     # get_all_todos()
@@ -340,8 +335,6 @@ def send_new_calendar_info(data):
     email = data["email"]
     curr_month_date = parser.isoparse(curr_month_date)
     prev_month_date = parser.isoparse(prev_month_date)
-    
-    prev_month = prev_month_date.month
     print(curr_month_date)
 
     cred = get_cred_from_email(email)
@@ -349,52 +342,90 @@ def send_new_calendar_info(data):
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
             update_tokens_in_db(email, cred)
+    message = {}
+    message_name = ""
+    delta = prev_month_date - curr_month_date
+    if delta > datetime.timedelta(days=40):
+        curr_month = curr_month_date.month
+        start_month = curr_month_date.replace(month=curr_month-1)
+        end_month = curr_month_date.replace(month=curr_month+1)
+        end_day = (calendar.monthrange(curr_month_date.year, curr_month+1))[1]
+        end_month = end_month.replace(day=end_day)
+        print(start_month)
+        print(end_month)
+        result = create_update_all_message(cred, start_month.isoformat(), end_month.isoformat())
+        message = {"events":result}
+        message_name = "updateAllMonths"
+    else:
+        message = create_update_month_message(cred, curr_month_date, prev_month_date)
+        message_name = "updateMonth"
+    flask_socketio.emit(message_name, message)
+
+
+def create_update_all_message(cred, start_month, end_month):
+    ''' returns the events seperated by month for the timespan specified'''
+    service = build("calendar", "v3", credentials=cred)
+    result = service.events().list(
+        calendarId="primary", timeMin=start_month,
+        timeMax=end_month, singleEvents=True,
+        orderBy="startTime").execute()
+    result = seperate_events_by_month(result["items"], start_month, end_month, result["timeZone"])
+    return result
+
+def create_update_month_message(cred, curr_month_date, prev_month_date):
+    '''
+    creates the message to send to the frontend. contains events for the new month
+    and what month to delete.
+    '''
     sorted_events = {}
     new_month = 0
-    if(curr_month_date < prev_month_date):
+    prev_month = prev_month_date.month
+    if curr_month_date < prev_month_date:
         delete_month = prev_month
-        if(delete_month == 12):
+        if delete_month == 12:
             delete_month = 0
         sorted_events = create_sorted_events_for_new_month(curr_month_date, -1, cred)
         new_month = curr_month_date.month
         new_month = new_month - 2
-    elif(curr_month_date > prev_month_date):
+    elif curr_month_date > prev_month_date:
         delete_month = prev_month - 2
-        if(delete_month < 0):
+        if delete_month < 0:
             delete_month = 12 + delete_month
         sorted_events = create_sorted_events_for_new_month(curr_month_date, 1, cred)
         new_month = curr_month_date.month
-    flask_socketio.emit("updateMonth", {
-            "addMonth":str(new_month),
-            "addEvents":sorted_events,
-            "deleteMonth":str(delete_month),
-            })
+    message = {
+        "addMonth":str(new_month),
+        "addEvents":sorted_events,
+        "deleteMonth":str(delete_month),
+        }
+    return message
+
 def create_sorted_events_for_new_month(curr_month_date, change, cred):
-        '''
-        value of prev_month is used instead of prev_month +1 
-        to account for javascript month notation; it starts with 0
-        '''
-        curr_month = curr_month_date.month
-        curr_year = curr_month_date.year
-        new_month = curr_month+change
-        if(new_month > 12):
-            new_month = new_month - 12
-        elif(new_month < 1):
-            new_month = 12 + new_month
-        print("curr+change=",curr_month+change)
-        new_month_date = curr_month_date.replace(month=new_month)
-        end_day = (calendar.monthrange(curr_year, new_month_date.month))[1]
-        new_month_date_end = new_month_date.replace(day=end_day)
-        sorted_events = {}
-        sorted_events[str(new_month-1)] = setup_month_dict(new_month-1, curr_year)
-        #-1 for 0 offset
-        service = build("calendar", "v3", credentials=cred)
-        events = service.events().list(
-            calendarId="primary", timeMin=new_month_date.isoformat(),
-            timeMax=new_month_date_end.isoformat(), singleEvents=True,
-            orderBy="startTime").execute()
-        sorted_events = populate_sorted_events(sorted_events, events["items"])
-        return sorted_events
+    '''
+    returns sorted events dict for month that frontend will add.
+    value of prev_month is used instead of prev_month + 1
+    to account for javascript month notation; it starts with 0
+    '''
+    curr_month = curr_month_date.month
+    curr_year = curr_month_date.year
+    new_month = curr_month+change
+    if new_month > 12:
+        new_month = new_month - 12
+    elif new_month < 1:
+        new_month = 12 + new_month
+    new_month_date = curr_month_date.replace(month=new_month)
+    end_day = (calendar.monthrange(curr_year, new_month_date.month))[1]
+    new_month_date_end = new_month_date.replace(day=end_day)
+    sorted_events = {}
+    sorted_events[str(new_month-1)] = setup_month_dict(new_month-1, curr_year)
+    #-1 for 0 offset
+    service = build("calendar", "v3", credentials=cred)
+    events = service.events().list(
+        calendarId="primary", timeMin=new_month_date.isoformat(),
+        timeMax=new_month_date_end.isoformat(), singleEvents=True,
+        orderBy="startTime").execute()
+    sorted_events = populate_sorted_events(sorted_events, events["items"])
+    return sorted_events
 
 
 def seperate_events_by_month(events, start_month_date, end_month_date, time_zone):
@@ -406,6 +437,8 @@ def seperate_events_by_month(events, start_month_date, end_month_date, time_zone
     start_month = start_datetime.month
     end_month = end_datetime.month
     year = start_datetime.year
+    if end_datetime.day == 1:
+        end_month = end_month -1
     if end_month < start_month:
         for i in range(start_month-1, 12):#loops through the months leading to december
             sorted_events[str(i)] = setup_month_dict(i, year)

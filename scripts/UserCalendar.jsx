@@ -12,7 +12,6 @@ export default function UserCalendar(params) {
   {
     var date = data["date"];
     var returnString = "";
-    //console.log(date);
     var month = date.getMonth();
     var day = date.getDate();
     if (currentMonth == '')
@@ -22,8 +21,6 @@ export default function UserCalendar(params) {
     if (calendarEvent[month] == undefined || calendarEvent[month][day] == undefined)
       return returnString;
     var eventsForDay = calendarEvent[month][day];
-    // console.log(day);
-    // console.log(eventsForDay);
     var event;
     for (event of eventsForDay)
     {
@@ -46,15 +43,12 @@ export default function UserCalendar(params) {
       Socket.on('updateMonth',(data)=>{
         if(calendarEvent == "")
           return;
-        console.log(49,calendarEvent);
         var month = parseInt(data["addMonth"],10);
         var events = data["addEvents"][month];
         var deleteMonth = data["deleteMonth"];
-        console.log(typeof(month));
-        console.log(calendarEvent[month]);
         if(calendarEvent[month] != undefined)
         {
-          console.log("dont update!");
+          // console.log("dont update!");
           return;
         }
           
@@ -63,7 +57,6 @@ export default function UserCalendar(params) {
         tempCalEvent[month] = events;
         delete tempCalEvent[deleteMonth];
         setCalendarEvent(tempCalEvent);
-        console.log(data);
       });
       return () => {
         Socket.removeEventListener('updateMonth');
@@ -71,7 +64,20 @@ export default function UserCalendar(params) {
     },[calendarEvent]);
   }
   
-  
+  function updateAllLoadedMonths()
+  {
+    var events;
+    React.useEffect(()=>{
+      Socket.on('updateAllMonths',(data)=>{
+        events = data["events"];
+        console.log(events);
+        setCalendarEvent(events); 
+      });
+      return () => {
+        Socket.removeEventListener('updateAllMonths');
+      };
+    });
+  }
   
   function changeMonth(data)
   {
@@ -85,34 +91,25 @@ export default function UserCalendar(params) {
       "prevMonth":prevMonth,
       "email":email
     });
-    
     setCurrentMonth(month);
-
-
   }
 
   function receiveCalendar()
   {
-    var change = false;
     var events;
     React.useEffect(()=>{
       Socket.on("calendarInfo",(data)=>{
         events = data["events"];
-        change = true;
+        console.log(events)
         setCalendarEvent(events);  
-        //console.log(events);      
       },[]);
       
     });
   }
-  //console.log("105",calendarEvent);
   receiveCalendar();
   updateCalendarMonth();
-  if(calendarEvent !="")
-    console.log("113",calendarEvent);
-
+  updateAllLoadedMonths();
   return (
-  //<iframe title="calendar" src={userURL} style={{ border: '0' }} width="800" height="600" frameBorder="0" scrolling="no" />
   <div>
     <Calendar
       onChange={onChange}
