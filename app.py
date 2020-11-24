@@ -381,7 +381,8 @@ def create_sorted_events_for_new_month(curr_month_date, change, cred):
             new_month = new_month - 12
         elif(new_month < 1):
             new_month = 12 + new_month
-        new_month_date = curr_month_date.replace(month=curr_month+change)
+        print("curr+change=",curr_month+change)
+        new_month_date = curr_month_date.replace(month=new_month)
         end_day = (calendar.monthrange(curr_year, new_month_date.month))[1]
         new_month_date_end = new_month_date.replace(day=end_day)
         sorted_events = {}
