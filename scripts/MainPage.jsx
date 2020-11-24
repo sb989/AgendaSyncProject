@@ -20,7 +20,7 @@ export default function MainPage(params) {
 
   function setUpDefaultLook() {
     React.useEffect(() => {
-      setSelected(React.createElement(UserCalendar, { }));
+      setSelected(React.createElement(UserCalendar, { "email":email }));
     },[]);
   }
 

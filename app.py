@@ -264,7 +264,10 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
 #     DB.session.delete(todo_entry);
 #     DB.session.commit();
 
-
+def get_cred_from_email(email):
+    person = get_person_object(email)
+    cred = person.cred
+    return cred
 @SOCKET_IO.on("login with code")
 def login(data):
     ''' On client login, authorize/store google auth token then emit google calendar information '''
@@ -289,7 +292,6 @@ def login(data):
 
     service = build("calendar", "v3", credentials=cred)
     # result = service.calendarList().list().execute()
-
     profileurl = (
         "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token={}".format(
             cred.token
@@ -304,7 +306,7 @@ def login(data):
     result = seperate_events_by_month(result["items"], start_month, end_month, result["timeZone"])
 
     flask_socketio.emit("email", {"email": user_email})
-    flask_socketio.emit("calendarInfo",{"events":result})
+    flask_socketio.emit("calendarInfo", {"events":result})
 
     if user_email not in get_all_emails():
         add_new_person_to_db(user_email, cred)
@@ -313,7 +315,6 @@ def login(data):
         print(f"user {user_email} exists")
         update_tokens_in_db(user_email, cred)
 
-    flask_socketio.emit("connected", {"calendarUpdate": result["items"]})
 
 @SOCKET_IO.on("login with email")
 def login_with_email(data):
@@ -321,22 +322,82 @@ def login_with_email(data):
     start_month = data["startMonth"]
     end_month = data["endMonth"]
     email = data["email"]
-    print(data)
     user_email = email
-    print(email)
-    
-    person = get_person_object(user_email)
-    cred = person.cred
-    print(cred)
-    print(cred.token)
+    cred = get_cred_from_email(user_email)
+
     service = build("calendar", "v3", credentials=cred)
     result = service.events().list(calendarId="primary", timeMin=start_month, timeMax=end_month, singleEvents=True, orderBy="startTime").execute()
     result = seperate_events_by_month(result["items"], start_month, end_month, result["timeZone"])
     flask_socketio.emit("email", {"email": user_email})
-    flask_socketio.emit("calendarInfo",{"events":result})
+    flask_socketio.emit("calendarInfo", {"events":result})
     # get_all_todos()
 
+@SOCKET_IO.on("currentMonth")
+def send_new_calendar_info(data):
+    '''tells client what month to delete and sends information on new month'''
+    curr_month_date = data["currMonth"]
+    prev_month_date = data["prevMonth"]
+    email = data["email"]
+    curr_month_date = parser.isoparse(curr_month_date)
+    prev_month_date = parser.isoparse(prev_month_date)
+    
+    prev_month = prev_month_date.month
+    print(curr_month_date)
+
+    cred = get_cred_from_email(email)
+    if not cred or not cred.valid:
+        if cred and cred.expired and cred.refresh_token:
+            cred.refresh(Request())
+            update_tokens_in_db(email, cred)
+    sorted_events = {}
+    new_month = 0
+    if(curr_month_date < prev_month_date):
+        delete_month = prev_month
+        if(delete_month == 12):
+            delete_month = 0
+        sorted_events = create_sorted_events_for_new_month(curr_month_date, -1, cred)
+        new_month = curr_month_date.month
+        new_month = new_month - 2
+    elif(curr_month_date > prev_month_date):
+        delete_month = prev_month - 2
+        if(delete_month < 0):
+            delete_month = 12 + delete_month
+        sorted_events = create_sorted_events_for_new_month(curr_month_date, 1, cred)
+        new_month = curr_month_date.month
+    flask_socketio.emit("updateMonth", {
+            "addMonth":str(new_month),
+            "addEvents":sorted_events,
+            "deleteMonth":str(delete_month),
+            })
+def create_sorted_events_for_new_month(curr_month_date, change, cred):
+        '''
+        value of prev_month is used instead of prev_month +1 
+        to account for javascript month notation; it starts with 0
+        '''
+        curr_month = curr_month_date.month
+        curr_year = curr_month_date.year
+        new_month = curr_month+change
+        if(new_month > 12):
+            new_month = new_month - 12
+        elif(new_month < 1):
+            new_month = 12 + new_month
+        new_month_date = curr_month_date.replace(month=curr_month+change)
+        end_day = (calendar.monthrange(curr_year, new_month_date.month))[1]
+        new_month_date_end = new_month_date.replace(day=end_day)
+        sorted_events = {}
+        sorted_events[str(new_month-1)] = setup_month_dict(new_month-1, curr_year)
+        #-1 for 0 offset
+        service = build("calendar", "v3", credentials=cred)
+        events = service.events().list(
+            calendarId="primary", timeMin=new_month_date.isoformat(),
+            timeMax=new_month_date_end.isoformat(), singleEvents=True,
+            orderBy="startTime").execute()
+        sorted_events = populate_sorted_events(sorted_events, events["items"])
+        return sorted_events
+
+
 def seperate_events_by_month(events, start_month_date, end_month_date, time_zone):
+    '''seperates the events into a dict with month indeces as keys'''
     sorted_events = {}
     sorted_events["timeZone"] = time_zone
     start_datetime = parser.isoparse(start_month_date)
@@ -345,25 +406,26 @@ def seperate_events_by_month(events, start_month_date, end_month_date, time_zone
     end_month = end_datetime.month
     year = start_datetime.year
     if end_month < start_month:
-        for i in range(start_month-1,12):#loops through the months leading to december
-            days_in_month = (calendar.monthrange(year,i+1))[1]
-            sorted_events[str(i)] = {}
-            for day in range(1,days_in_month+1):
-                sorted_events[str(i)][day] = [] #creates a dict entry for that day;it is a list
-        for i in range(0,end_month):# loops through january to the last month
-            days_in_month = (calendar.monthrange(year,i+1))[1]
-            sorted_events[str(i)] = {}
-            for day in range(1,days_in_month+1):
-                sorted_events[str(i)][day] = [] #creates a dict entry for that day;it is a list
-            
+        for i in range(start_month-1, 12):#loops through the months leading to december
+            sorted_events[str(i)] = setup_month_dict(i, year)
+        for i in range(0, end_month):# loops through january to the last month
+            sorted_events[str(i)] = setup_month_dict(i, year)
     else:
-        for i in range(start_month-1,end_month):
-            days_in_month = (calendar.monthrange(year,i+1))[1]
-            sorted_events[str(i)] = {}
-            for day in range(1,days_in_month+1):
-                sorted_events[str(i)][day] = [] #creates a dict entry for that day;it is a list
-    print(start_month)
-    print(end_month)
+        for i in range(start_month-1, end_month):
+            sorted_events[str(i)] = setup_month_dict(i, year)
+    sorted_events = populate_sorted_events(sorted_events, events)
+    return sorted_events
+
+def setup_month_dict(month, year):
+    '''sets up a month dict contains days worth of entries. each entry is a list'''
+    days_in_month = (calendar.monthrange(year, month+1))[1]
+    month_dict = {}
+    for day in range(1, days_in_month+1):
+        month_dict[day] = [] #creates a dict entry for that day;it is a list
+    return month_dict
+
+def populate_sorted_events(sorted_events, events):
+    '''inserts events into proper month day list'''
     for event in events:
         if "dateTime" in event["start"] and "dateTime" in event["end"]:
             month = event["start"]["dateTime"]
@@ -404,8 +466,7 @@ def recieve_phone_number(data):
 def add_calendar_event(data):
     ''' Retrieve calendar event from client, insert it into client's google calendar via API '''
     user_email = data["email"]
-    person = get_person_object(user_email)
-    cred = person.cred
+    cred = get_cred_from_email(user_email)
     if not cred or not cred.valid:
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
