@@ -23,6 +23,7 @@ export default function UserCalendar(params) {
       return returnString;
     var eventsForDay = calendarEvent[month][day];
     var event;
+    var events = [];
     for (event of eventsForDay)
     {
       var start = event["start"];
@@ -33,9 +34,13 @@ export default function UserCalendar(params) {
       var startTime = start.toLocaleString(DateTime.TIME_SIMPLE);
       var endTime = end.toLocaleString(DateTime.TIME_SIMPLE);
       var duration = startTime + "-" + endTime;
-      returnString += duration + ": "+summary;
+      var eventInfo = duration + ": "+summary;
+      var element = React.createElement("div",{},eventInfo);
+
+      events.push(element);
     }
-    return returnString;
+    console.log(events);
+    return events;
   }
 
   function updateCalendarMonth()//receives calendar info for a new month and learns what month to delete
