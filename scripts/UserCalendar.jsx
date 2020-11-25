@@ -8,6 +8,7 @@ export default function UserCalendar(params) {
   const { DateTime } = require("luxon");
   const { email } = params;
 
+
   function selectEventsForTile(data)//parses calendar info to display on calendar gui
   {
     var date = data["date"];
@@ -43,6 +44,7 @@ export default function UserCalendar(params) {
       Socket.on('updateMonth',(data)=>{
         if(calendarEvent == "")
           return;
+        console.log("data",data);
         var month = parseInt(data["addMonth"],10);
         var events = data["addEvents"][month];
         var deleteMonth = data["deleteMonth"];
@@ -53,6 +55,7 @@ export default function UserCalendar(params) {
         }
           
         console.log("add");
+        console.log(calendarEvent);
         let tempCalEvent = JSON.parse(JSON.stringify(calendarEvent));
         tempCalEvent[month] = events;
         delete tempCalEvent[deleteMonth];
@@ -88,7 +91,8 @@ export default function UserCalendar(params) {
     Socket.emit("currentMonth",{
         "currMonth":monthAsString,
         "prevMonth":prevMonth,
-        "email":email
+        "email":email,
+        "padding":2
     });
     setCurrentMonth(month);
   }
@@ -109,8 +113,9 @@ export default function UserCalendar(params) {
   function askForInitialCalendarInfo()
   {
     var month = new Date();
-    var startMonth = new Date(month.getFullYear(),month.getMonth()-1,1,0,0,0,0);//
-    var endMonth = new Date(startMonth.getFullYear(), month.getMonth() + 2, 0,23,59,59,999); 
+    var padding = 2;
+    var startMonth = new Date(month.getFullYear(),month.getMonth()-padding,1,0,0,0,0);//
+    var endMonth = new Date(startMonth.getFullYear(), month.getMonth() + padding +1, 0,23,59,59,999); 
     startMonth = startMonth.toISOString();
     endMonth = endMonth.toISOString();
     console.log("email",email);

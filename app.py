@@ -333,11 +333,12 @@ def send_new_calendar_info(data):
     '''tells client what month to delete and sends information on new month'''
     curr_month_date = data["currMonth"]
     prev_month_date = data["prevMonth"]
+    padding = data["padding"]
     email = data["email"]
     curr_month_date = parser.isoparse(curr_month_date)
     prev_month_date = parser.isoparse(prev_month_date)
     print(curr_month_date)
-
+    print(padding)
     cred = get_cred_from_email(email)
     if not cred or not cred.valid:
         if cred and cred.expired and cred.refresh_token:
@@ -348,23 +349,32 @@ def send_new_calendar_info(data):
     delta = prev_month_date - curr_month_date
     if abs(delta) > datetime.timedelta(days=40):
         curr_month = curr_month_date.month
-        start_date = curr_month - 1
-        end_date = curr_month + 1
-        if start_date < 1:
-            start_date = start_date + 12
-        if end_date > 12:
-            end_date = 12 - end_date
-        start_month_date = curr_month_date.replace(month=curr_month-1)
-        end_month_date = curr_month_date.replace(month=curr_month+1)
-        end_day = (calendar.monthrange(curr_month_date.year, curr_month+1))[1]
-        end_month_date = end_month_date.replace(day=end_day)
- 
-        result = chf.create_update_all_message(cred, start_month_date.isoformat(), end_month_date.isoformat())
+        start_month = curr_month - padding
+        end_month = curr_month + padding
+        curr_year = curr_month_date.year
+        if start_month < 1:
+            start_month = start_month + 12
+            start_date = curr_month_date.replace(month=start_month, year=curr_year-1)
+        else:
+            start_date = curr_month_date.replace(month=start_month)
+        if end_month > 12:
+            end_month = end_month - 12
+            end_date = curr_month_date.replace(month=end_month, year=curr_year+1)
+            end_day = (calendar.monthrange(curr_year+1, end_month))[1]
+            end_date = end_date.replace(day=end_day)
+        else:
+            end_date = curr_month_date.replace(month=end_month)
+            end_day = (calendar.monthrange(curr_year, end_month))[1]
+            end_date = end_date.replace(day=end_day)
+        print(start_date)
+        print(end_date)
+        result = chf.create_update_all_message(cred, start_date.isoformat(), end_date.isoformat())
         message = {"events":result}
         message_name = "updateAllMonths"
     else:
-        message = chf.create_update_month_message(cred, curr_month_date, prev_month_date)
+        message = chf.create_update_month_message(cred, curr_month_date, prev_month_date, padding)
         message_name = "updateMonth"
+    print(message)
     flask_socketio.emit(message_name, message)
 
 
