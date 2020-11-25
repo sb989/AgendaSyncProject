@@ -20,6 +20,9 @@ export default function AddCalendarEvent(params) {
       title: input,
       email,
     });
+    document.getElementById("calendarEventTitle").value="";
+    setStartDate(new Date());
+
   }
 
   function newInp(curr) {

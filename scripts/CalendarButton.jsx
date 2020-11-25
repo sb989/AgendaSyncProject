@@ -3,9 +3,10 @@ import UserCalendar from './UserCalendar';
 
 export default function CalendarButton(params) {
   const { setSelected } = params;
+  const { email } = params;
   function calendar(e) {
     e.preventDefault();
-    setSelected(React.createElement(UserCalendar, {}));
+    setSelected(React.createElement(UserCalendar, {email}));
   }
   return (
     <button type="button" onClick={calendar}>

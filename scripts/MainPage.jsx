@@ -40,7 +40,7 @@ export default function MainPage(params) {
   function removePhoneForm() {
     React.useEffect(() => {
       Socket.on('Server has phone number', () => {
-        setSelected(React.createElement(UserCalendar, {  }));
+        setSelected(React.createElement(UserCalendar, {  "email":email }));
       });
     });
   }
@@ -63,6 +63,7 @@ export default function MainPage(params) {
       <br />
       <CalendarButton
         setSelected={setSelected}
+        email={email}
       />
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;

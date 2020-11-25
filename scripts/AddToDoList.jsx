@@ -8,15 +8,19 @@ export default function AddToDoList(params) {
   const [startDate, setStartDate] = React.useState(new Date());
   const [endDate, setEndDate] = React.useState(new Date());
   const { email } = params;
+
   function sendToDoList(e) {
     e.preventDefault();
-    // console.log(input);
+    console.log(input);
     Socket.emit('addToDoList', {
       email,
       description: input,
       startDate,
       endDate,
     });
+    document.getElementById("todoitem").value="";
+    setStartDate(new Date());
+    setEndDate(new Date());
   }
 
   function newInp(curr) {

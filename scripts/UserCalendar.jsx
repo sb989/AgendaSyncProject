@@ -8,7 +8,7 @@ export default function UserCalendar(params) {
   const { DateTime } = require("luxon");
   const { email } = params;
 
-  function selectEventsForTile(data)
+  function selectEventsForTile(data)//parses calendar info to display on calendar gui
   {
     var date = data["date"];
     var returnString = "";
@@ -37,7 +37,7 @@ export default function UserCalendar(params) {
     return returnString;
   }
 
-  function updateCalendarMonth()
+  function updateCalendarMonth()//receives calendar info for a new month and learns what month to delete
   {
     React.useEffect(()=>{
       Socket.on('updateMonth',(data)=>{
@@ -64,7 +64,7 @@ export default function UserCalendar(params) {
     },[calendarEvent]);
   }
   
-  function updateAllLoadedMonths()
+  function updateAllLoadedMonths()//receives info to update all months currently loaded
   {
     var events;
     React.useEffect(()=>{
@@ -85,11 +85,10 @@ export default function UserCalendar(params) {
     var month = data["activeStartDate"];
     console.log("changemonth");
     var monthAsString = month.toISOString();
-  
     Socket.emit("currentMonth",{
-      "currMonth":monthAsString,
-      "prevMonth":prevMonth,
-      "email":email
+        "currMonth":monthAsString,
+        "prevMonth":prevMonth,
+        "email":email
     });
     setCurrentMonth(month);
   }
@@ -106,6 +105,28 @@ export default function UserCalendar(params) {
       
     });
   }
+
+  function askForInitialCalendarInfo()
+  {
+    var month = new Date();
+    var startMonth = new Date(month.getFullYear(),month.getMonth()-1,1,0,0,0,0);//
+    var endMonth = new Date(startMonth.getFullYear(), month.getMonth() + 2, 0,23,59,59,999); 
+    startMonth = startMonth.toISOString();
+    endMonth = endMonth.toISOString();
+    console.log("email",email);
+
+    React.useEffect(()=>{
+      console.log("email",email);
+      Socket.emit('allMonths',
+        {
+          email,
+          startMonth,
+          endMonth,
+        });
+    },[]);
+  }
+
+  askForInitialCalendarInfo()
   receiveCalendar();
   updateCalendarMonth();
   updateAllLoadedMonths();
