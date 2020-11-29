@@ -1,14 +1,14 @@
-.hooli-text-pane {
+.mountain-text-pane {
   position: absolute;
   left: 20%;
   top: 30%;
 }
 
-.hooli-text {
+.mountain-text {
   color: #fff;
 }
 
-.hooli-svg {
+.mountain-svg {
   position: absolute;
   bottom: -2vw;
   left: -12vw;
