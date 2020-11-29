@@ -1,12 +1,12 @@
-/* Technology section */
 
-.technology-panels.panel-header {
+
+.agenda-panels.panel-header {
   background-color: #4dadfe;
 }
 
 /* Brand Halo panel */
 
-.technology-panels.brand-halo {
+.agenda-panels.brand-halo {
   height: 760px;
 }
 
@@ -59,7 +59,7 @@
 
 /* Computing power panel */
 
-.technology-panels.computing-power {
+.agenda-panels.computing-power {
   background-image: url("https://images.unsplash.com/photo-1577394732330-38cef75bc388?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80");
 }
 
@@ -84,7 +84,7 @@
 }
 
 /* Game-changing panel */
-.technology-panels.game-changing {
+.agenda-panels.game-changing {
   background-image: url("https://images.unsplash.com/photo-1523634921619-37ce98c1877f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1952&q=80");
 }
 
@@ -112,7 +112,7 @@
 }
 
 @media (max-width: 992px) {
-  .technology-panels.brand-halo {
+  .agenda-panels.brand-halo {
     height: 650px;
   }
 
