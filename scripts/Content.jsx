@@ -7,7 +7,7 @@ export function Content() {
   const [authenticated, setAuthenticated] = React.useState(false);
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
-  const [profilePic, setProfilePic] = React.useState('');
+  const [profilePic, setProfilePic] = React.useState(''); //Corresponds to line in app.py: flask_socketio.emit("profilePicture", {"picture": profile_picture})
   const [code, setCode] = React.useState('');
   const [userURL, setUserURL] = React.useState('');
 

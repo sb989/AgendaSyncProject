@@ -50,7 +50,6 @@ DB = flask_sqlalchemy.SQLAlchemy(APP)
 
 import models
 
-
 def init_db(APP):
     ''' initialize the database '''
     DB.init_app(APP)
@@ -63,7 +62,6 @@ def init_db(APP):
 def hello():
     ''' Initialize frontend template index.html '''
     return flask.render_template("index.html")
-
 
 # twilio
 # twilio
@@ -228,6 +226,7 @@ def get_person_object_phone_number(phone):
 def get_person_object(email):
     ''' Query person ID from specific person's table, filter by email '''
     some_person = DB.session.query(models.Person).filter_by(email=email).first()
+    print(type(some_person))
     return some_person
 
 
@@ -297,6 +296,7 @@ def login(data):
             "openid",
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
+            "https://www.googleapis.com/auth/calendar.events",
             "https://www.googleapis.com/auth/calendar",
         ],
         redirect_uri=GOOGLE_URI,
@@ -316,13 +316,17 @@ def login(data):
     )
     profile = requests.get(profileurl)
     profile = profile.json()
-
+    
+    profile_picture = profile['picture']
     user_email = profile["email"]
 
     login_user = "https://calendar.google.com/calendar/embed?src={}&ctz=America%2FNew_York".format(
         user_email
     )
+    
     flask_socketio.emit("googleCalendar", {"url": login_user, "email": user_email})
+    flask_socketio.emit("profilePicture", {"picture": profile_picture})
+    
     calendar_id = result["items"][0]["id"]
 
     result = service.events().list(calendarId=calendar_id).execute()
