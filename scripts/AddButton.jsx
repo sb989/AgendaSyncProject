@@ -11,7 +11,7 @@ export default function AddButton(params) {
     );
   }
   return (
-    <button type="button" onClick={addForm}>
+    <button type="button" onClick={addForm} className="col-2">
       <img src="https://images.assetsdelivery.com/compings_v2/feelisgood/feelisgood1709/feelisgood170902152.jpg" width="100" height="100" alt="" />
     </button>
   );

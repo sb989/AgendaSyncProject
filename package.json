@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "babel": "^6.23.0",
+    "bootstrap": "^4.5.3",
     "dotenv": "^8.2.0",
     "luxon": "^1.25.0",
     "ngrok": "^3.3.0",

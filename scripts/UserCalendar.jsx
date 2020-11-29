@@ -35,11 +35,11 @@ export default function UserCalendar(params) {
       var endTime = end.toLocaleString(DateTime.TIME_SIMPLE);
       var duration = startTime + "-" + endTime;
       var eventInfo = duration + ": "+summary;
-      var element = React.createElement("div",{},eventInfo);
+      var abbreventInfo = startTime + ": "+summary.slice(0,20)
+      var element = React.createElement("span",{"className":"event"},abbreventInfo);
 
       events.push(element);
     }
-    console.log(events);
     return events;
   }
 
@@ -141,8 +141,9 @@ export default function UserCalendar(params) {
   updateCalendarMonth();
   updateAllLoadedMonths();
   return (
-  <div>
+  <div className="container-fluid">
     <Calendar
+      className="col"
       onChange={onChange}
       value={value}
       tileContent={selectEventsForTile}

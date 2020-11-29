@@ -67,12 +67,14 @@ export default function GoogleButton(params) {
 
   return (
     <GoogleLogout
-      className="googleLogoutButton"
-      isSignedIn={false}
-      clientId="30624731772-clsbuhec4ag6bukbqpsuf1qppc3g3n5r.apps.googleusercontent.com"
-      buttonText="Logout"
-      onLogoutSuccess={logout}
-      onFailure={failure}
+    className="googleLogoutButton"
+    isSignedIn={false}
+    clientId="30624731772-clsbuhec4ag6bukbqpsuf1qppc3g3n5r.apps.googleusercontent.com"
+    buttonText="Logout"
+    onLogoutSuccess={logout}
+    onFailure={failure}
     />
+
+    
   );
 }

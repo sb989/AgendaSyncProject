@@ -50,41 +50,49 @@ export default function MainPage(params) {
   removePhoneForm();
   return (
     <div>
-      <GoogleButton
-        className="googleButton"
-        setAuthenticated={setAuthenticated}
-        setName={setName}
-        setEmail={setEmail}
-        setProfilePic={setProfilePic}
-        authenticated={authenticated}
-      />
+      <div className="container-fluid">
+        <div className="row">
+          <img src="../static/agenda_sync_logo.png" className="col-2"></img>
+          <div className="col-8"></div>
+          <div className="col-2">
+            <div className="googleButton">
+              <GoogleButton 
+                setAuthenticated={setAuthenticated}
+                setName={setName}
+                setEmail={setEmail}
+                setProfilePic={setProfilePic}
+                authenticated={authenticated}
+              />
+            </div>
+          </div>
+        </div>       
+      </div>
+      
       <br />
       {selected}
       <br />
-      <CalendarButton
-        setSelected={setSelected}
-        email={email}
-      />
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <div className="container">
+        <div className="row">
+          <CalendarButton
+            setSelected={setSelected}
+            email={email}
+          />
+          <div className="col-3"></div>
+          <AddButton
+            setSelected={setSelected}
+            email={email}
+          />
+          <div className="col-3"></div>
+      
 
-      <AddButton
-        setSelected={setSelected}
-        email={email}
-      />
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
-      <AgendaButton
-        setSelected={setSelected}
-        email={email}
-      />
+          <AgendaButton
+            setSelected={setSelected}
+            email={email}
+          />
+        </div>
+        
+      </div>
+      
     </div>
 
   );
