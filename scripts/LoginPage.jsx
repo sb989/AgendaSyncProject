@@ -1,5 +1,7 @@
 import * as React from 'react';
 import GoogleButton from './GoogleButton';
+import htmlContent from './LandingPage.html';
+
 
 export default function LoginPage(params) {
   const { setAuthenticated } = params;
@@ -8,8 +10,11 @@ export default function LoginPage(params) {
   const { setEmail } = params;
   const { authenticated } = params;
   const { setCode } = params;
+  
   return (
+    
     <div className="loginBox">
+      <div dangerouslySetInnerHTML={ {__html: htmlContent} } />
       <h1 className="loginTitle">
         AgendaSync
       </h1>
