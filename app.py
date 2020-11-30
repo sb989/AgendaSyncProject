@@ -72,6 +72,7 @@ def hello():
 ADD_TODO = "add todo"
 UPDATE_TODO = 'update todo'
 DELETE_TODO = "delete todo"
+MARK_COMPLETE = "mark complete"
 LIST_TODO = "list todo"
 START_DATE = "start date"
 DUE_DATE = "due date"
@@ -111,6 +112,7 @@ def bot():
         add_new_todo_to_db(message_body, user_email)
         msg.body("Inserted: '" + message_body + "' into your todolist!")
         responded = True
+    
         
     if DELETE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
         delete_todo(int(incoming_msg[12:]), user_email)
@@ -119,6 +121,28 @@ def bot():
         
     elif DELETE_TODO in incoming_msg:
         msg.body("Please reply with a todo id to delete: 'delete todo id'\n")
+        msg.body(get_all_todos_values(user_email))
+        responded = True
+        
+    if MARK_COMPLETE in incoming_msg and incoming_msg[14:].isnumeric():
+        delete_todo(int(incoming_msg[14:]), user_email)
+        msg.body("Marking complete")
+        responded = True
+        
+    elif MARK_COMPLETE in incoming_msg:
+        msg.body("Please reply with a todo id to mark complete: 'mark complete id'\n")
+        msg.body(get_all_todos_values(user_email))
+        responded = True
+    
+    if UPDATE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
+        delete_todo(int(incoming_msg[12:]), user_email)
+        msg.body("Updating from your todolist!")
+        message_body = incoming_msg[9:]
+        add_new_todo_to_db(message_body, user_email)
+        responded = True
+        
+    elif UPDATE_TODO in incoming_msg:
+        msg.body("Please reply with a todo id to update: 'update todo id'\n")
         msg.body(get_all_todos_values(user_email))
         responded = True
 
