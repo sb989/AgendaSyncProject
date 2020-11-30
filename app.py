@@ -126,7 +126,7 @@ def bot():
         
     if MARK_COMPLETE in incoming_msg and incoming_msg[14:].isnumeric():
         delete_todo(int(incoming_msg[14:]), user_email)
-        msg.body("Marking complete")
+        msg.body("Marking todo id" +incoming_msg[14:] +" complete")
         responded = True
         
     elif MARK_COMPLETE in incoming_msg:
@@ -135,10 +135,8 @@ def bot():
         responded = True
     
     if UPDATE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
-        delete_todo(int(incoming_msg[12:]), user_email)
-        msg.body("Updating from your todolist!")
-        message_body = incoming_msg[9:]
-        add_new_todo_to_db(message_body, user_email)
+        update_todo(incoming_msg[12:], user_email, start_date_est, end_date_est)
+        msg.body("Updating todo id " +incoming_msg[12:] +" from your todolist!")
         responded = True
         
     elif UPDATE_TODO in incoming_msg:
@@ -304,6 +302,13 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
     DB.session.commit()
 
 
+def update_todo(id, user_email, start, end):
+    some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
+    todo = DB.session.query(models.Todo).filter_by(id=id, person=some_person).first()
+    todo.start_todo = start
+    todo.due_date = end
+    DB.session.commit()
+    
 def delete_todo(id, user_email):
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
     DB.session.query(models.Todo).filter_by(id=id, person=some_person).delete(synchronize_session='evaluate')
