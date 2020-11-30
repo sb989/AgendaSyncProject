@@ -13,6 +13,8 @@ import flask
 import requests
 import flask_socketio
 import flask_sqlalchemy
+from datetime import datetime
+from datetime import timedelta
 
 from flask import request
 
@@ -65,7 +67,7 @@ def hello():
 
 # twilio
 # twilio
-# ngrok http 5000
+# ngrok http 8080
 
 ADD_TODO = "add todo"
 UPDATE_TODO = 'update todo'
@@ -81,10 +83,10 @@ UPDATE_CALENDAR = "update calendar"
 @APP.route("/bot", methods=["POST"])
 def bot():
     ''' Initialize and run the bot from mobile inputs via Twilio '''
-    start_date = datetime.datetime.now()
-    start_date_est = start_date - datetime.timedelta(hours=5)
+    start_date = datetime.now()
+    start_date_est = start_date - timedelta(hours=5)
     start_date_iso = start_date_est.isoformat()
-    end_date_est = start_date_est + datetime.timedelta(hours=1)
+    end_date_est = start_date_est + timedelta(hours=1)
     end_date_iso = end_date_est.isoformat()
     
     incoming_msg = request.values.get("Body", "").lower()
@@ -99,8 +101,9 @@ def bot():
         msg.body(
             "Hello! I'm the agendasync textbot!"
             + "My know commands are: 'add todo'"
-            + ", 'delete todo, 'list todo'"
-            + ",'start date', and 'due date', 'add calendar'"
+            + ", 'delete todo, 'list todo' "
+            + ",'start date', and 'due date',"
+            + "'add calendar', and 'update calendar'"
         )
         responded = True
 
@@ -129,10 +132,24 @@ def bot():
         
     if ADD_CALENDAR in incoming_msg:
         message_body = incoming_msg[13:]
-        msg.body("Added " + message_body + " to your calender")
         event = {'title': message_body, 'date': start_date_iso, 'email': user_email}
+        msg.body("Added " + message_body + " to your calender")
         add_calendar_event(event)
         responded = True
+        
+    if UPDATE_CALENDAR in incoming_msg:    
+        message_body = incoming_msg[16:]
+        if "date" in incoming_msg:
+            datetimeobject = datetime.strptime(incoming_msg[21:],'%m/%d/%Y %I:%M%p')
+            newformat = datetimeobject.strftime('%Y-%m-%d' + 'T' + '%H:%m:%s' + 'Z')
+            print(newformat)
+            #event_contents = {'title': message_body[0].strip("'"), 'date': newformat, 'email': message_body[2].strip("'")}
+            
+            #print(event_contents)
+            #add_calendar_event(event_contents)
+            #msg.body("Inserted: '" + message_body + "' into your calendar!")
+            responded = True
+        print(message_body)
 
     if START_DATE in incoming_msg:
         message_body = incoming_msg[11:]
@@ -328,8 +345,14 @@ def login(data):
     flask_socketio.emit("profilePicture", {"picture": profile_picture})
     
     calendar_id = result["items"][0]["id"]
+    #print(result["items"][0])
 
     result = service.events().list(calendarId=calendar_id).execute()
+    #print(result["items"])
+    
+    #events = service.events().get(calendarId=calendar_id, eventId='eventId').execute()
+    #print(events)
+    
     # get_all_todos()
     # print(result['items'])
 
