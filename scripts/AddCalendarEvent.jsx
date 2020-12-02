@@ -32,28 +32,31 @@ export default function AddCalendarEvent(params) {
     <form>
       <div className=" container">
         <div className="row mb-2">
-          <div className="input-group-prepend col-4 mr-1 mb-2 mb-md-0 mb-lg-0">
+          <div className="input-group-prepend col-3 col-sm-2  col-md-1 mr-sm-3 mr-md-5 mr-xl-4 mb-2 mb-md-0 mb-lg-0">
             <span className="input-group-text" id="basic-addon1">Title</span>
           </div>
           <input
             type="text"
-            className="form-control col"
+            className="form-control col ml-3 ml-sm-0"
             id="calendarEventTitle"
             name="calendarEventTitle"
             onInput={newInp}
           />
         </div>
-        <div className="row">
-          <div className="input-group-prepend col-4">
+        <div className="row mb-2">
+          <div className="input-group-prepend col-3 col-sm-2 col-md-1 mr-sm-3 mr-md-5 mr-xl-4 mb-2 mb-md-0 mb-lg-0">
             <span className="input-group-text" id="basic-addon2">Date</span>
           </div>
-          <DatePicker
-          selected={date}
-          onSelect={setDate} // when day is clicked
-          onChange={setDate} // only when value has changed
-          timeIntervals="1"
-          showTimeSelect
-          />
+          <div className="ml-3 ml-sm-0">
+            <DatePicker
+            selected={date}
+            onSelect={setDate} // when day is clicked
+            onChange={setDate} // only when value has changed
+            timeIntervals="1"
+            showTimeSelect
+            />
+          </div>
+          
         </div>
         <div className="row">
           <button className="btn btn-primary" type="submit" onClick={sendCalendarEvent}>

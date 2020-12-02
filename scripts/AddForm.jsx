@@ -41,11 +41,11 @@ export default function AddForm(params) {
         <div className="col">
           <form>
             <div className="btn-group btn-group-toggle" data-toggle="buttons">
-              <label className="btn btn-primary active">
+              <label className="btn btn-primary ">
                 <input type="radio" id="todolist" name="Add" value="todolist" onChange={formPicker} />
                 ToDoList
               </label>
-              <label className="btn btn-primary active">
+              <label className="btn btn-primary ">
                 <input type="radio" id="calendarevent" name="Add" value="calendarevent" onChange={formPicker} />
                 Calendar Event
               </label>
