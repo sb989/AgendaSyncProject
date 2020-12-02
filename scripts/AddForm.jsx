@@ -35,15 +35,28 @@ export default function AddForm(params) {
     setUpDefault();
   },[])
   return (
-    <div>
-      <form>
-        <input type="radio" id="todolist" name="Add" value="todolist" onChange={formPicker} />
-        ToDoList
-        <input type="radio" id="calendarevent" name="Add" value="calendarevent" onChange={formPicker} />
-        Calendar Event
-        <br />
-      </form>
-      {form}
+    <div className="container">
+      <div className ="row">
+        <div className="col-2"></div>
+        <div className="col">
+          <form>
+            <div className="btn-group btn-group-toggle" data-toggle="buttons">
+              <label className="btn btn-primary active">
+                <input type="radio" id="todolist" name="Add" value="todolist" onChange={formPicker} />
+                ToDoList
+              </label>
+              <label className="btn btn-primary active">
+                <input type="radio" id="calendarevent" name="Add" value="calendarevent" onChange={formPicker} />
+                Calendar Event
+              </label>
+            </div>
+          </form>
+          {form}
+        </div>
+        <div className="col-2"></div>
+      </div>
+      
+      
 
     </div>
   );

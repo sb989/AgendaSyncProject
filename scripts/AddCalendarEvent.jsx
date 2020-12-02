@@ -30,26 +30,31 @@ export default function AddCalendarEvent(params) {
   }
   return (
     <form>
-      Title
-      <input
-        type="text"
-        id="calendarEventTitle"
-        name="calendarEventTitle"
-        onInput={newInp}
-      />
-      <br />
-      Date
-      <DatePicker
+      <div className="input-group">
+        <div className="input-group-prepend">
+          <span className="input-group-text" id="basic-addon1">Title</span>
+        </div>
+        <input
+          type="text"
+          className="form-control"
+          id="calendarEventTitle"
+          name="calendarEventTitle"
+          onInput={newInp}
+        />
+        <div className="input-group-prepend">
+          <span className="input-group-text" id="basic-addon2">Date</span>
+        </div>
+        <DatePicker
         selected={date}
         onSelect={setDate} // when day is clicked
         onChange={setDate} // only when value has changed
         timeIntervals="1"
         showTimeSelect
-      />
-      <button type="submit" onClick={sendCalendarEvent}>
-        Submit
-      </button>
-
+        />
+        <button className="btn btn-primary" type="submit" onClick={sendCalendarEvent}>
+          Submit
+        </button>
+      </div>
     </form>
   );
 }
