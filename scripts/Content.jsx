@@ -9,11 +9,10 @@ export function Content() {
   const [email, setEmail] = React.useState('');
   const [profilePic, setProfilePic] = React.useState('');
   const [code, setCode] = React.useState('');
-  const [userURL, setUserURL] = React.useState('');
 
   let page;
 
-  function getUserURL() {
+  function getEmail() {
     React.useEffect(() => {
       Socket.on('email', (data) => {
         setEmail(data.email);
@@ -21,10 +20,11 @@ export function Content() {
     });
   }
 
-  function getProfilePic(){
+  function getProfile(){
     React.useEffect(()=>{
-      Socket.on('profilePic',(data)=>{
+      Socket.on('profile',(data)=>{
         setProfilePic(data.profilePic);
+        setName(data.name);
       });
     })
   }
@@ -58,8 +58,8 @@ export function Content() {
     }
   }
   selectPage();
-  getUserURL();
-  getProfilePic();
+  getEmail();
+  getProfile();
   return (
     <div>
       {page}

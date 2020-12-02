@@ -443,11 +443,11 @@ def add_todo_list(data):
     add_new_todo_to_db(desc, user_email, start_todo, end_todo)
     # get_all_todos()
 
-@SOCKET_IO.on("sendProfilePic")
-def send_profile_pic(data):
+@SOCKET_IO.on("sendProfile")
+def send_profile(data):
+    '''sends profile info'''
     email = data["email"]
     cred = get_cred_from_email(email)
-    print(cred.token)
     if not cred or not cred.valid:
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
@@ -459,7 +459,12 @@ def send_profile_pic(data):
     )
     profile = requests.get(profileurl)
     profile = profile.json()
-    flask_socketio.emit("profilePic",{"profilePic":profile["picture"]})
+    flask_socketio.emit("profile",
+        {
+            "profilePic":profile["picture"],
+            "name":profile["name"]
+            }
+        )
     
 if __name__ == "__main__":
     # init_db(APP)

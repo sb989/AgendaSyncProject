@@ -15,7 +15,7 @@ export default function MainPage(params) {
   const { profilePic } = params;
   const { setEmail } = params;
   const { authenticated } = params;
-
+  const { name } = params;
   const [selected, setSelected] = React.useState('');
 
   function setUpDefaultLook() {
@@ -26,7 +26,7 @@ export default function MainPage(params) {
 
   function askForProfilePic(){
     React.useEffect(()=>{
-      Socket.emit("sendProfilePic",{
+      Socket.emit("sendProfile",{
         email
       });
     },[]);
@@ -65,7 +65,10 @@ export default function MainPage(params) {
               className="agendaSyncLogo"
               alt="Responsive image"> 
             </img>
-            <div className="col col-md col-xl"></div>
+            <div className="col col-md col-xl pt-2">
+              <p className="d-none d-md-block text-right">Welcome, {name}</p>
+            </div>
+            
             <div className="col-4 col-md-2 col-xl-2 justify-content-end">
               <button 
                 type="button" 
@@ -88,14 +91,13 @@ export default function MainPage(params) {
               </div>
             </div>
             
-        </div>       
-      </div>
-      
-      
-      <br />
+          </div>       
+          <div className="d-block d-md-none">
+            <p >Welcome, {name}</p>
+          </div>
+        </div>     
       {selected}
-      <br />
-        <div className="container">
+        <div className="container mt-3">
           <div className="row justify-content-center">
             <AddButton
               setSelected={setSelected}
