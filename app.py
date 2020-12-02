@@ -5,6 +5,11 @@ from os.path import join, dirname
 import calendar
 import datetime
 from dateutil import parser
+from dateutil import tz
+import datetime
+
+# from datetime import *
+
 import flask
 import requests
 import flask_socketio
@@ -66,16 +71,26 @@ def hello():
 # ngrok http 5000
 
 ADD_TODO = "add todo"
+UPDATE_TODO = 'update todo'
 DELETE_TODO = "delete todo"
+MARK_COMPLETE = "mark complete"
 LIST_TODO = "list todo"
-START_TODO = "start date"
+START_DATE = "start date"
 DUE_DATE = "due date"
 HELP_ME = "help me"
+ADD_CALENDAR = "add calendar"
+UPDATE_CALENDAR = "update calendar"
 
 
 @APP.route("/bot", methods=["POST"])
 def bot():
     ''' Initialize and run the bot from mobile inputs via Twilio '''
+    start_date = datetime.datetime.now()
+    start_date_est = start_date - datetime.timedelta(hours=5)
+    start_date_iso = start_date_est.isoformat()
+    end_date_est = start_date_est + datetime.timedelta(hours=1)
+    end_date_iso = end_date_est.isoformat()
+    
     incoming_msg = request.values.get("Body", "").lower()
     phone = request.form["From"]
     person = get_person_object_phone_number(phone)
@@ -83,12 +98,13 @@ def bot():
     resp = MessagingResponse()
     msg = resp.message()
     responded = False
+    
     if HELP_ME in incoming_msg:
         msg.body(
             "Hello! I'm the agendasync textbot!"
             + "My know commands are: 'add todo'"
             + ", 'delete todo, 'list todo'"
-            + ",'start date', and 'due date'"
+            + ",'start date', and 'due date', 'add calendar'"
         )
         responded = True
 
@@ -97,23 +113,53 @@ def bot():
         add_new_todo_to_db(message_body, user_email)
         msg.body("Inserted: '" + message_body + "' into your todolist!")
         responded = True
-    # if DELETE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
-    #     delete_todo(int(incoming_msg[12:]))
-    #     msg.body("Deleting from your todolist!")
-    #     responded = True
-    # elif DELETE_TODO in incoming_msg:
-    #     msg.body("Please reply with a todo id to delete: 'delete todo id'\n")
-    #     msg.body(get_all_todos_values())
-    #     responded = True
+    
+        
+    if DELETE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
+        delete_todo(int(incoming_msg[12:]), user_email)
+        msg.body("Deleting from your todolist!")
+        responded = True
+        
+    elif DELETE_TODO in incoming_msg:
+        msg.body("Please reply with a todo id to delete: 'delete todo id'\n")
+        msg.body(get_all_todos_values(user_email))
+        responded = True
+        
+    if MARK_COMPLETE in incoming_msg and incoming_msg[14:].isnumeric():
+        delete_todo(int(incoming_msg[14:]), user_email)
+        msg.body("Marking todo id" +incoming_msg[14:] +" complete")
+        responded = True
+        
+    elif MARK_COMPLETE in incoming_msg:
+        msg.body("Please reply with a todo id to mark complete: 'mark complete id'\n")
+        msg.body(get_all_todos_values(user_email))
+        responded = True
+    
+    if UPDATE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
+        update_todo(incoming_msg[12:], user_email, start_date_est, end_date_est)
+        msg.body("Updating todo id " +incoming_msg[12:] +" from your todolist!")
+        responded = True
+        
+    elif UPDATE_TODO in incoming_msg:
+        msg.body("Please reply with a todo id to update: 'update todo id'\n")
+        msg.body(get_all_todos_values(user_email))
+        responded = True
 
     if LIST_TODO in incoming_msg:
         msg.body(
-            "Your todo listt contents are as follows: "
+            "Your todo list contents are as follows: "
             + get_all_todos_values(user_email)
         )
         responded = True
+        
+    if ADD_CALENDAR in incoming_msg:
+        message_body = incoming_msg[13:]
+        msg.body("Added " + message_body + " to your calender")
+        event = {'title': message_body, 'date': start_date_iso, 'email': user_email}
+        add_calendar_event(event)
+        responded = True
 
-    if START_TODO in incoming_msg:
+    if START_DATE in incoming_msg:
         message_body = incoming_msg[11:]
         # query for message_body in todolist table
         # if message_body not in table:
@@ -257,12 +303,18 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
     DB.session.commit()
 
 
-# def delete_todo(id):
-#     global user_email
-#     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
-#     todo_entry = DB.session.query(models.Todo).filter_by(id=id, person=some_person)
-#     DB.session.delete(todo_entry);
-#     DB.session.commit();
+def update_todo(id, user_email, start, end):
+    some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
+    todo = DB.session.query(models.Todo).filter_by(id=id, person=some_person).first()
+    todo.start_todo = start
+    todo.due_date = end
+    DB.session.commit()
+    
+def delete_todo(id, user_email):
+    some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
+    DB.session.query(models.Todo).filter_by(id=id, person=some_person).delete(synchronize_session='evaluate')
+    # DB.session.delete(todo_entry);
+    DB.session.commit();
 
 def get_cred_from_email(email):
     '''returns cred based on email'''
@@ -467,7 +519,7 @@ def send_profile(data):
         )
     
 if __name__ == "__main__":
-    # init_db(APP)
+    init_db(APP)
     SOCKET_IO.run(
         APP,
         host=os.getenv("IP", "0.0.0.0"),

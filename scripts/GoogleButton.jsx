@@ -78,6 +78,7 @@ export default function GoogleButton(params) {
     )}
     onLogoutSuccess={logout}
     onFailure={failure}
+
     />
 
     
