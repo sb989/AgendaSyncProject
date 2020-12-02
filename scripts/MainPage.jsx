@@ -69,7 +69,7 @@ export default function MainPage(params) {
               <p className="d-none d-md-block text-right">Welcome, {name}</p>
             </div>
             
-            <div className="col-4 col-md-2 col-xl-2 justify-content-end">
+            <div className="col-4 col-sm-2">
               <button 
                 type="button" 
                 className="btn dropdown-toggle" 

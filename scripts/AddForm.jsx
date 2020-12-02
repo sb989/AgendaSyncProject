@@ -37,7 +37,7 @@ export default function AddForm(params) {
   return (
     <div className="container">
       <div className ="row">
-        <div className="col-2"></div>
+        <div className="col-0 col-md-2"></div>
         <div className="col">
           <form>
             <div className="btn-group btn-group-toggle" data-toggle="buttons">

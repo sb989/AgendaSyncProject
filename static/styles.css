@@ -8,13 +8,13 @@ body{
 }
 
 .agendaSyncLogo{
-    width:18vh;
+    width:18vmin;
     height:auto;
     object-fit: scale-down;
 }
 
 .profilePic{
-    width:5vh;
+    width:5vmax;
     height:auto;
     object-fit: scale-down;
 }

@@ -29,9 +29,9 @@ export default function AddToDoList(params) {
 
   return (
     <form>
-      <div className="input-group container">
+      <div className="container">
         <div className="row mb-2">
-          <div className="input-group-prepend col-4 mr-1 mb-2 mb-md-0 mb-lg-0">
+          <div className="input-group-prepend col-2 col-sm-3 col-md-3 col-lg-2 mr-3 mr-md-4 mr-lg-5 mr-xl-3 mb-2 mb-md-0 mb-lg-0">
             <span className="input-group-text" id="basic-addon1">Description</span>
           </div>
           <input
@@ -43,7 +43,7 @@ export default function AddToDoList(params) {
           />
         </div>
         <div className="row mb-2">
-          <div className="input-group-prepend col-4 mr-1 mb-2 mb-md-0 mb-lg-0">
+          <div className="input-group-prepend col-2 col-sm-3 col-md-3 col-lg-2 mr-3 mr-md-4 mr-lg-5 mr-xl-3 mb-2 mb-md-0 mb-lg-0">
             <span className="input-group-text" id="basic-addon2">Start Date</span>
           </div>
           <div className="ml-3 ml-md-0 ml-lg-0">
@@ -57,7 +57,7 @@ export default function AddToDoList(params) {
           </div>
         </div>
         <div className="row mb-2">
-          <div className="input-group-prepend col-4 mr-1 mb-2 mb-md-0 mb-lg-0">
+          <div className="input-group-prepend col-2 col-sm-3 col-md-3 col-lg-2 mr-3 mr-md-4 mr-lg-5 mr-xl-3 mb-2 mb-md-0 mb-lg-0">
             <span className="input-group-text" id="basic-addon3">End Date</span>
           </div>
           <div className="ml-3 ml-md-0 ml-lg-0">
@@ -71,7 +71,6 @@ export default function AddToDoList(params) {
           </div>
           
         </div>
-        <div class="w-100"></div>
         <div className="row">
           <button className="btn btn-primary ml-3" type="submit" onClick={sendToDoList}>
             Submit
