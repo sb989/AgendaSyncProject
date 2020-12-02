@@ -9,8 +9,13 @@ export default function AgendaButton(params) {
     setSelected(React.createElement(ToDoList, { email }));
   }
   return (
-    <button type="button" onClick={addForm} className="col-2">
-      <img src="https://cdn1.iconfinder.com/data/icons/rounded-set-6/48/todo-list-512.png" width="100" height="100" alt="" />
-    </button>
+    <div className="col-4 col-xl-2 ml-xl-5">
+      <button 
+      type="button" onClick={addForm} 
+      className="btn btn-landingPageYellow btn-fullsize"
+      >
+        <span className="oi oi-list" title="list" aria-hidden="true"></span>
+      </button>
+    </div>
   );
 }

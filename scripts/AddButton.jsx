@@ -11,8 +11,12 @@ export default function AddButton(params) {
     );
   }
   return (
-    <button type="button" onClick={addForm} className="col-2">
-      <img src="https://images.assetsdelivery.com/compings_v2/feelisgood/feelisgood1709/feelisgood170902152.jpg" width="100" height="100" alt="" />
+   <div className="col-4 col-xl-2 mr-xl-5">
+    <button type="button" onClick={addForm} 
+    className="btn btn-landingPageOrange btn-fullsize"
+    >
+      <span className="oi oi-plus" title="plus" aria-hidden="true"></span>
     </button>
+    </div>
   );
 }

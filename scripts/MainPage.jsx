@@ -12,7 +12,7 @@ export default function MainPage(params) {
   const { email } = params;
   const { setAuthenticated } = params;
   const { setName } = params;
-  const { setProfilePic } = params;
+  const { profilePic } = params;
   const { setEmail } = params;
   const { authenticated } = params;
 
@@ -21,6 +21,14 @@ export default function MainPage(params) {
   function setUpDefaultLook() {
     React.useEffect(() => {
       setSelected(React.createElement(UserCalendar, { "email":email }));
+    },[]);
+  }
+
+  function askForProfilePic(){
+    React.useEffect(()=>{
+      Socket.emit("sendProfilePic",{
+        email
+      });
     },[]);
   }
 
@@ -44,55 +52,65 @@ export default function MainPage(params) {
       });
     });
   }
-
+  askForProfilePic();
   setUpDefaultLook();
   getPhoneNumber();
   removePhoneForm();
   return (
-    <div>
-      <div className="container-fluid">
-        <div className="row">
-          <img src="../static/agenda_sync_logo.png" className="col-2"></img>
-          <div className="col-8"></div>
-          <div className="col-2">
-            <div className="googleButton">
-              <GoogleButton 
-                setAuthenticated={setAuthenticated}
-                setName={setName}
-                setEmail={setEmail}
-                setProfilePic={setProfilePic}
-                authenticated={authenticated}
-              />
+    <div className="m-3">
+        <div className="container-fluid ">
+          <div className="row p-3">
+            <img 
+              src="../static/agenda_sync_logo.png" 
+              className="agendaSyncLogo"
+              alt="Responsive image"> 
+            </img>
+            <div className="col col-md col-xl"></div>
+            <div className="col-4 col-md-2 col-xl-2 justify-content-end">
+              <button 
+                type="button" 
+                className="btn dropdown-toggle" 
+                data-toggle="dropdown" 
+                aria-haspopup="true" 
+                aria-expanded="false"
+                >
+                  <img className="profilePic" src={profilePic} alt="profilePic"></img>
+              </button>
+              <div className="dropdown-menu dropdown-menu-right">
+                <a className="dropdown-item px-0" href="#">
+                  <GoogleButton 
+                    setAuthenticated={setAuthenticated}
+                    setName={setName}
+                    setEmail={setEmail}
+                    authenticated={authenticated}
+                  />
+                </a>
+              </div>
             </div>
-          </div>
+            
         </div>       
       </div>
+      
       
       <br />
       {selected}
       <br />
-      <div className="container">
-        <div className="row">
-          <CalendarButton
-            setSelected={setSelected}
-            email={email}
-          />
-          <div className="col-3"></div>
-          <AddButton
-            setSelected={setSelected}
-            email={email}
-          />
-          <div className="col-3"></div>
-      
-
-          <AgendaButton
-            setSelected={setSelected}
-            email={email}
-          />
+        <div className="container">
+          <div className="row justify-content-center">
+            <AddButton
+              setSelected={setSelected}
+              email={email}
+            />
+            <CalendarButton
+              setSelected={setSelected}
+              email={email}
+            />
+            <AgendaButton
+              setSelected={setSelected}
+              email={email}
+            />
+          </div>
         </div>
-        
-      </div>
-      
     </div>
 
   );

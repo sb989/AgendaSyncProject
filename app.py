@@ -443,7 +443,24 @@ def add_todo_list(data):
     add_new_todo_to_db(desc, user_email, start_todo, end_todo)
     # get_all_todos()
 
-
+@SOCKET_IO.on("sendProfilePic")
+def send_profile_pic(data):
+    email = data["email"]
+    cred = get_cred_from_email(email)
+    print(cred.token)
+    if not cred or not cred.valid:
+        if cred and cred.expired and cred.refresh_token:
+            cred.refresh(Request())
+            update_tokens_in_db(email, cred)
+    profileurl = (
+        "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token={}".format(
+            cred.token
+        )
+    )
+    profile = requests.get(profileurl)
+    profile = profile.json()
+    flask_socketio.emit("profilePic",{"profilePic":profile["picture"]})
+    
 if __name__ == "__main__":
     # init_db(APP)
     SOCKET_IO.run(

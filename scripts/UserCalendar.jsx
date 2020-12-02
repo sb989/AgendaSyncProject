@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Calendar from 'react-calendar';
 import Socket from './Socket';
+import { v4 as uuidv4 } from 'uuid';
 export default function UserCalendar(params) {
   const [value, onChange] = React.useState(new Date());
   const [calendarEvent,setCalendarEvent] = React.useState("");
@@ -36,7 +37,8 @@ export default function UserCalendar(params) {
       var duration = startTime + "-" + endTime;
       var eventInfo = duration + ": "+summary;
       var abbreventInfo = startTime + ": "+summary.slice(0,20)
-      var element = React.createElement("span",{"className":"event"},abbreventInfo);
+      var key = uuidv4();
+      var element = React.createElement("span",{"className":"event","key":key},abbreventInfo);
 
       events.push(element);
     }
@@ -106,12 +108,16 @@ export default function UserCalendar(params) {
   {
     var events;
     React.useEffect(()=>{
+      let mounted = true;
       Socket.on("calendarInfo",(data)=>{
         events = data["events"];
         console.log(events)
-        setCalendarEvent(events);  
+        if(mounted)
+        {
+          setCalendarEvent(events);
+        }
       },[]);
-      
+      return () => mounted = false;
     });
   }
 

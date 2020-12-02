@@ -17,12 +17,7 @@ export default function GoogleButton(params) {
     } else {
       const { email } = response.profileObj;
       params.setEmail(email);
-      // Socket.emit('login with email',
-      //   {
-      //     email,
-      //     startMonth,
-      //     endMonth,
-      //   });// after login; every page refresh rerturns profile instead
+     
     }
     params.setAuthenticated(true);
     params.setCode(code);
@@ -43,8 +38,15 @@ export default function GoogleButton(params) {
       email,
       profilePic,
     });
-    params.setEmail('');
-    params.setAuthenticated(false);
+    
+    let mounted = true;
+    if(mounted)
+    {
+      params.setAuthenticated(false);
+    }
+    return () => mounted = false;
+    
+    
   }
 
   if (!params.authenticated) {
@@ -71,6 +73,9 @@ export default function GoogleButton(params) {
     isSignedIn={false}
     clientId="30624731772-clsbuhec4ag6bukbqpsuf1qppc3g3n5r.apps.googleusercontent.com"
     buttonText="Logout"
+    render={renderProps => (
+      <button className="btn btn-ligh col" onClick={renderProps.onClick} disabled={renderProps.disabled}>Logout</button>
+    )}
     onLogoutSuccess={logout}
     onFailure={failure}
     />

@@ -21,6 +21,14 @@ export function Content() {
     });
   }
 
+  function getProfilePic(){
+    React.useEffect(()=>{
+      Socket.on('profilePic',(data)=>{
+        setProfilePic(data.profilePic);
+      });
+    })
+  }
+
   function selectPage() {
     if (authenticated && email !== '') {
       page = React.createElement(
@@ -29,7 +37,7 @@ export function Content() {
           setAuthenticated,
           setName,
           setEmail,
-          setProfilePic,
+          profilePic,
           authenticated,
           name,
           email,
@@ -51,6 +59,7 @@ export function Content() {
   }
   selectPage();
   getUserURL();
+  getProfilePic();
   return (
     <div>
       {page}
