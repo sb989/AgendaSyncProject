@@ -363,12 +363,6 @@ def login(data):
         update_tokens_in_db(user_email, cred)
 
 
-# @SOCKET_IO.on("login with email")
-# def login_with_email(data):
-#     ''' On client email login, retrieve email and update credentials before calendar emit '''
-#     email = data["email"]
-#     flask_socketio.emit("email", {"email": email})
-
 @SOCKET_IO.on("allMonths")
 def send_initial_calendar_info(data):
     '''sends initial calendar info to the frontend'''

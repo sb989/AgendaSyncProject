@@ -3,7 +3,6 @@ import calendar
 from dateutil import parser
 from apiclient.discovery import build
 
-MONTHS_TO_LOAD = 5
 
 def create_update_all_message(cred, start_month, end_month):
     ''' returns the events seperated by month for the timespan specified'''
