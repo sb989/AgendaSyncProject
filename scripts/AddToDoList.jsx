@@ -63,8 +63,8 @@ export default function AddToDoList(params) {
           <div className="ml-3 ml-md-0 ml-lg-0">
             <DatePicker
             selected={startDate}
-            onSelect={(d) => setStartDate(d)} // when day is clicked
-            onChange={(d) => setStartDate(d)} // only when value has changed
+            onSelect={(d) => setEndDate(d)} // when day is clicked
+            onChange={(d) => setEndDate(d)} // only when value has changed
             timeIntervals="1"
             showTimeSelect
             />
