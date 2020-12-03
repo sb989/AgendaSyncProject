@@ -102,6 +102,7 @@
 @media (max-width: 567px) {
   .game-changing-text {
     padding-top: 0;
+    font-size: 100px;
   }
 
   .game-changing-text-pane {

@@ -20,7 +20,7 @@ export default function LoginPage(params) {
                     <source src="/assets/videos/splash.mp4" type="video/mp4"/>
                 </video>
                 <img className="splash-panel-image logo" src="https://dewey.tailorbrands.com/production/brand_version_mockup_image/304/4167981304_a6db7ea3-9908-4d0b-b315-1ed7c9167b14.png?cb=1605992586"/>
-                <div className="splash-panel-image subtitle">
+                <div href="#section1" className="splash-panel-image subtitle">
                 We’ve got you in sync!
                 </div>
                 <div className="splash-panel-image-tag-line"></div>
@@ -55,7 +55,7 @@ export default function LoginPage(params) {
                 <img className="panel-image-overlay" src="https://images.unsplash.com/photo-1523634921619-37ce98c1877f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1952&q=80"/>
                 <div className="panel-overlay">
                     <div className="game-changing-text-pane">
-                        <p className="game-changing-text pane-text"/>We have collectively used APIs, chatbot functionality, ReactJS, Python, and to-do list functionalities.<br/><br/>  
+                        <p className="game-changing-text pane-text" style={{fontSize: "100px"}}/>We have collectively used APIs, chatbot functionality, ReactJS, Python, and to-do list functionalities.<br/><br/>  
                     </div>
                 </div>
             </div>
@@ -161,7 +161,7 @@ export default function LoginPage(params) {
     
     </div>
     
-    <div className="loginBox">
+    <div id="section1" className="loginBox">
       <img className="logo" src="https://dewey.tailorbrands.com/production/brand_version_mockup_image/304/4167981304_a6db7ea3-9908-4d0b-b315-1ed7c9167b14.png?cb=1605992586" alt="agenda" />
       <br />
       <GoogleButton
