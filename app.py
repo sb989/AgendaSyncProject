@@ -73,7 +73,7 @@ def update_calendar(incoming_msg, email, message):
     
     if "event" in incoming_msg:
         msg_array = message.split(" ", 1)
-        msg_array[1] = msg_array[1].split(";")
+        msg_array[1] = msg_array[1].split(":")
         print(msg_array)
         
         for item in result["items"]:
@@ -84,9 +84,6 @@ def update_calendar(incoming_msg, email, message):
                 print("Replaced event")
                 return("completed event")
                 
-    if "date" in incoming_msg:
-    
-
 
 @APP.route("/", methods=["GET", "POST"])
 def hello():
@@ -174,7 +171,7 @@ def bot():
         msg_array[1] = msg_array[1].split(":")
         
         if(update_calendar(incoming_msg, user_email, message_body) == 'completed event'):
-            msg.body("Replaced event title '" + msg_array[1][0] + " with " + msg_array[1][1] + "' in your calendar!")
+            msg.body("Replaced event title " + msg_array[1][0] + " with " + msg_array[1][1] + " in your calendar!")
             responded = True
         
         if(update_calendar(incoming_msg, user_email, message_body) == 'completed date'):
