@@ -12,6 +12,9 @@ body{
     height:auto;
     object-fit: scale-down;
 }
+/*.logo{*/
+/*    width:50%;*/
+/*}*/
 
 .profilePic{
     width:5vmax;

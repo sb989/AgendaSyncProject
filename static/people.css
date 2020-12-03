@@ -1,0 +1,42 @@
+.people-panels.panel-header {
+  background: #f14400;
+}
+
+.people-panels.software-people {
+  background-image: url("https://images.unsplash.com/photo-1573166801077-d98391a43199?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1949&q=80");
+}
+
+.software-people-text-pane {
+  display: table;
+  width: 50%;
+  height: 50%;
+}
+
+.software-people-text {
+  display: table-cell;
+  vertical-align: middle;
+  padding-left: 100px;
+  left: 100%;
+}
+
+.core-competencies-panel {
+  padding: 75px 0;
+}
+
+.core-competencies-text {
+  margin: 0 200px;
+}
+
+@media (max-width: 1024px) {
+  .core-competencies-text {
+    margin: 0;
+  }
+
+  .software-people-text {
+    padding-left: 10px;
+  }
+}
+
+.people-panels.thumbs-up-panel {
+  background-image: url("https://images.unsplash.com/photo-1602526430780-782d6b1783fa?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80");
+}
