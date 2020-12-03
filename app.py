@@ -59,11 +59,7 @@ def init_db(APP):
     # models.createModels()
     DB.session.commit()
     
-def update_calendar_event(incoming_msg, email, message):
-    msg_array = message.split(" ", 1)
-    msg_array[1] = msg_array[1].split(";")
-    print(msg_array)
-        
+def update_calendar(incoming_msg, email, message):
     person = get_person_object(email)
     cred = person.cred
         
@@ -76,6 +72,10 @@ def update_calendar_event(incoming_msg, email, message):
     result = service.events().list(calendarId=email).execute()
     
     if "event" in incoming_msg:
+        msg_array = message.split(" ", 1)
+        msg_array[1] = msg_array[1].split(";")
+        print(msg_array)
+        
         for item in result["items"]:
             if item['summary'] == msg_array[1][0]:
                 event = service.events().get(calendarId=email, eventId=item['id']).execute()
@@ -83,6 +83,8 @@ def update_calendar_event(incoming_msg, email, message):
                 service.events().update(calendarId=email, eventId=item['id'], body=event).execute()
                 print("Replaced event")
                 return("completed event")
+                
+    if "date" in incoming_msg:
     
 
 
@@ -171,8 +173,12 @@ def bot():
         msg_array = message_body.split(" ", 1)
         msg_array[1] = msg_array[1].split(":")
         
-        if(update_calendar_event(incoming_msg, user_email, message_body) == 'completed event'):
+        if(update_calendar(incoming_msg, user_email, message_body) == 'completed event'):
             msg.body("Replaced event title '" + msg_array[1][0] + " with " + msg_array[1][1] + "' in your calendar!")
+            responded = True
+        
+        if(update_calendar(incoming_msg, user_email, message_body) == 'completed date'):
+            msg.body("Replaced start date '" + msg_array[1][0] + " with " + msg_array[1][1] + "' in your calendar!")
             responded = True
         
         # if "date" in incoming_msg:
@@ -380,16 +386,6 @@ def login(data):
     flask_socketio.emit("profilePicture", {"picture": profile_picture})
     
     calendar_id = result["items"][0]["id"]
-
-    # result = service.events().list(calendarId=calendar_id).execute()
-    # for i in result["items"]:
-    #     if i['summary'] == 'DANCE!' and i['dateTime'] == '2020-11-29T13:06:19-05:00':
-    #         events = service.events().get(calendarId=calendar_id, eventId=i['id']).execute()
-    #         print(events)
-    #         print("\n")
-    
-    # get_all_todos()
-    # print(result['items'])
 
     if user_email not in get_all_emails():
         add_new_person_to_db(user_email, cred)
