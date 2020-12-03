@@ -345,13 +345,13 @@ def login(data):
     flask_socketio.emit("profilePicture", {"picture": profile_picture})
     
     calendar_id = result["items"][0]["id"]
-    #print(result["items"][0])
 
     result = service.events().list(calendarId=calendar_id).execute()
-    #print(result["items"])
-    
-    #events = service.events().get(calendarId=calendar_id, eventId='eventId').execute()
-    #print(events)
+    for i in result["items"]:
+        if i['summary'] == 'DANCE!':
+            events = service.events().get(calendarId=calendar_id, eventId=i['id']).execute()
+            print(events)
+            print("\n")
     
     # get_all_todos()
     # print(result['items'])
