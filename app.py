@@ -89,7 +89,10 @@ def bot():
     end_date_est = start_date_est + timedelta(hours=1)
     end_date_iso = end_date_est.isoformat()
     
-    incoming_msg = request.values.get("Body", "").lower()
+    incoming_msg_orig = request.values.get("Body", "")
+    
+    incoming_msg = incoming_msg_orig.lower()
+    
     phone = request.form["From"]
     person = get_person_object_phone_number(phone)
     user_email = person.email
@@ -138,12 +141,13 @@ def bot():
         responded = True
         
     if UPDATE_CALENDAR in incoming_msg:    
-        message_body = incoming_msg[16:]
+        message_body = incoming_msg_orig[16:]
         
         if "event" in incoming_msg:
-            msg_array = message_body.split(" ")
+            msg_array = message_body.split(" ", 1)
+            msg_array[1] = msg_array[1].split(":")
             print(msg_array)
-            print(msg_array[2])
+            
             person = get_person_object(user_email)
             cred = person.cred
             
@@ -156,14 +160,15 @@ def bot():
             service = build("calendar", "v3", credentials=cred)
             result = service.events().list(calendarId=user_email).execute()
     
-    
             for item in result["items"]:
-                print(item['summary'])
-                if item['summary'] == msg_array[1]:
+                if item['summary'] == msg_array[1][0]:
                     
                     event = service.events().get(calendarId=user_email, eventId=item['id']).execute()
-                    event['summary'] = msg_array[2]
-                    updated_event = service.events().update(calendarId=user_email, eventId=item['id'], body=event).execute()
+                    event['summary'] = msg_array[1][1]
+                    service.events().update(calendarId=user_email, eventId=item['id'], body=event).execute()
+                    
+                    msg.body("Replaced event title '" + msg_array[1][0] + " with " + msg_array[1][1] + "' in your calendar!")
+                    responded = True
         
         # if result["items"]['summary'] == 'Dr. Ronald quick appt (Andre Pugliese)':
         #     events = service.events().get(calendarId=user_email, eventId=result["items"]['id']).execute()
@@ -186,7 +191,6 @@ def bot():
             #add_calendar_event(event_contents)
             #msg.body("Inserted: '" + message_body + "' into your calendar!")
             # responded = True
-        print(message_body)
 
     if START_DATE in incoming_msg:
         message_body = incoming_msg[11:]
