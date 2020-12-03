@@ -58,6 +58,32 @@ def init_db(APP):
     DB.APP = APP
     # models.createModels()
     DB.session.commit()
+    
+def update_calendar_event(incoming_msg, email, message):
+    msg_array = message.split(" ", 1)
+    msg_array[1] = msg_array[1].split(";")
+    print(msg_array)
+        
+    person = get_person_object(email)
+    cred = person.cred
+        
+    if not cred or not cred.valid:
+        if cred and cred.expired and cred.refresh_token:
+            cred.refresh(Request())
+            update_tokens_in_db(email, cred)
+            
+    service = build("calendar", "v3", credentials=cred)
+    result = service.events().list(calendarId=email).execute()
+    
+    if "event" in incoming_msg:
+        for item in result["items"]:
+            if item['summary'] == msg_array[1][0]:
+                event = service.events().get(calendarId=email, eventId=item['id']).execute()
+                event['summary'] = msg_array[1][1]
+                service.events().update(calendarId=email, eventId=item['id'], body=event).execute()
+                print("Replaced event")
+                return("completed event")
+    
 
 
 @APP.route("/", methods=["GET", "POST"])
@@ -142,44 +168,12 @@ def bot():
         
     if UPDATE_CALENDAR in incoming_msg:    
         message_body = incoming_msg_orig[16:]
+        msg_array = message_body.split(" ", 1)
+        msg_array[1] = msg_array[1].split(":")
         
-        if "event" in incoming_msg:
-            msg_array = message_body.split(" ", 1)
-            msg_array[1] = msg_array[1].split(":")
-            print(msg_array)
-            
-            person = get_person_object(user_email)
-            cred = person.cred
-            
-            if not cred or not cred.valid:
-                if cred and cred.expired and cred.refresh_token:
-                    cred.refresh(Request())
-                    update_tokens_in_db(user_email, cred)
-                    
-                    
-            service = build("calendar", "v3", credentials=cred)
-            result = service.events().list(calendarId=user_email).execute()
-    
-            for item in result["items"]:
-                if item['summary'] == msg_array[1][0]:
-                    
-                    event = service.events().get(calendarId=user_email, eventId=item['id']).execute()
-                    event['summary'] = msg_array[1][1]
-                    service.events().update(calendarId=user_email, eventId=item['id'], body=event).execute()
-                    
-                    msg.body("Replaced event title '" + msg_array[1][0] + " with " + msg_array[1][1] + "' in your calendar!")
-                    responded = True
-        
-        # if result["items"]['summary'] == 'Dr. Ronald quick appt (Andre Pugliese)':
-        #     events = service.events().get(calendarId=user_email, eventId=result["items"]['id']).execute()
-        #     print(events)
-        
-        # for i in :
-        #     events = service.events().get(calendarId=user_email, eventId=i['id']).execute()
-        #     if
-        #     print(events)
-        #     print("\n")
-            
+        if(update_calendar_event(incoming_msg, user_email, message_body) == 'completed event'):
+            msg.body("Replaced event title '" + msg_array[1][0] + " with " + msg_array[1][1] + "' in your calendar!")
+            responded = True
         
         # if "date" in incoming_msg:
         #     datetimeobject = datetime.strptime(incoming_msg[21:],'%m/%d/%Y %I:%M%p')
