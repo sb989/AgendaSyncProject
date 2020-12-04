@@ -22,6 +22,11 @@ body{
     object-fit: scale-down;
 }
 
+.todopicture{
+  width:5vmax;
+  height:auto;
+    object-fit: scale-down;
+}
 .profileButton{
     width:5vh;
 }

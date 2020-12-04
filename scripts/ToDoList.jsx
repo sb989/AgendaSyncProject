@@ -9,6 +9,8 @@ export default function ToDoList(params) {
   const index = 0;
   const { email } = params;
   const { DateTime } = require("luxon");
+  const isImageUrl = require('is-image-url');
+
   function sendMessage() {
     React.useEffect(() => {
       Socket.emit('send todo', {
@@ -30,20 +32,45 @@ export default function ToDoList(params) {
   }
 
   function PutMessage(props) {
-    console.log(props);
     var todo = props.todo;
     var start =todo["start_todo"];
     start = DateTime.fromISO(start);
     var now = new Date();
-    console.log(props);
     if (start>now)
     {
       console.log("too soon to show");
     }
+    var splitMessage = todo["todo"].split(" ");
+    var message;
+    var images = [];
+    var i =0;
+    var len = splitMessage.length;
+    for (;i<len;i++)
+    {
+      message=splitMessage[i];
+      if(isImageUrl(message))
+      {
+        splitMessage[i] = React.createElement(
+          "img",
+          {
+            "src":message,
+            "alt":message,
+            "className":"todopicture"
+          },
+        );
+      }
+      else if(i < len-1)
+      {
+        splitMessage[i]= message+" ";
+      }
+    }
+    console.log(splitMessage);
     return (
       <div className="row">
         <div className="col-4">
-          {todo["todo"]}
+          {
+            splitMessage
+          }
         </div>
         <div className="col-4">
           {' endTime: '}
@@ -54,6 +81,8 @@ export default function ToDoList(params) {
           <span className="oi oi-check" title="check" aria-hidden="true"></span>
           </button>
         </div>
+        
+        
       </div>
     );
   }

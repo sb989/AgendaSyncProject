@@ -524,7 +524,6 @@ def delete_todo_frontend(data):
     '''deletes todo specified by the frontend'''
     email = data["email"]
     id = data["id"]
-
     print(data)
     delete_todo(id, email)
 if __name__ == "__main__":
