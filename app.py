@@ -394,6 +394,7 @@ def login(data):
     
     # get_all_todos()
     # print(result['items'])
+    
     flask_socketio.emit("email", {"email": user_email})
 
 
