@@ -279,16 +279,20 @@ def get_all_todos(data):
     user_email = data["email"]
     person = get_person_object(user_email)
     todos = []
-    start_todos = []
-    due_dates = []
 
     all_todos = DB.session.query(models.Todo).filter_by(person_id=person.id).all()
     for todo in all_todos:
-        todos.append(todo.todo)
-        start_todos.append(str(todo.start_todo))
-        due_dates.append(str(todo.due_date))
+        todos.append({
+            "todo":todo.todo,
+            "start_todo":str(todo.start_todo),
+            "due_date":str(todo.due_date),
+            "id":todo.id
+            })
+        # todos.append(todo.todo)
+        # start_todos.append(str(todo.start_todo))
+        # due_dates.append(str(todo.due_date))
 
-    message = {"Todos": todos, "start_todos": start_todos, "due_dates": due_dates}
+    message = {"todos":todos}
     flask_socketio.emit("sending todo info", message)
     print(message)
 
@@ -511,13 +515,18 @@ def send_profile(data):
     )
     profile = requests.get(profileurl)
     profile = profile.json()
-    flask_socketio.emit("profile",
-        {
-            "profilePic":profile["picture"],
-            "name":profile["name"]
-            }
-        )
-    
+    flask_socketio.emit("profile", {
+                "profilePic":profile["picture"],
+                "name":profile["name"]})
+
+@SOCKET_IO.on("deleteTodo")
+def delete_todo_frontend(data):
+    '''deletes todo specified by the frontend'''
+    email = data["email"]
+    id = data["id"]
+
+    print(data)
+    delete_todo(id, email)
 if __name__ == "__main__":
     init_db(APP)
     SOCKET_IO.run(
