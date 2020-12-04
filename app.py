@@ -13,6 +13,8 @@ import flask
 import requests
 import flask_socketio
 import flask_sqlalchemy
+from datetime import datetime
+from datetime import timedelta
 
 from flask import request
 
@@ -50,13 +52,38 @@ DB = flask_sqlalchemy.SQLAlchemy(APP)
 
 import models
 
-
 def init_db(APP):
     ''' initialize the database '''
     DB.init_app(APP)
     DB.APP = APP
     # models.createModels()
     DB.session.commit()
+    
+def update_calendar_event(incoming_msg, email, message):
+    msg_array = message.split(" ", 1)
+    msg_array[1] = msg_array[1].split(":")
+    print(msg_array)
+        
+    person = get_person_object(email)
+    cred = person.cred
+        
+    if not cred or not cred.valid:
+        if cred and cred.expired and cred.refresh_token:
+            cred.refresh(Request())
+            update_tokens_in_db(email, cred)
+            
+    service = build("calendar", "v3", credentials=cred)
+    result = service.events().list(calendarId=email).execute()
+    
+    if "event" in incoming_msg:
+        for item in result["items"]:
+            if item['summary'] == msg_array[1][0]:
+                event = service.events().get(calendarId=email, eventId=item['id']).execute()
+                event['summary'] = msg_array[1][1]
+                service.events().update(calendarId=email, eventId=item['id'], body=event).execute()
+                print("Replaced event")
+                return("completed event")
+    
 
 
 @APP.route("/", methods=["GET", "POST"])
@@ -64,15 +91,13 @@ def hello():
     ''' Initialize frontend template index.html '''
     return flask.render_template("index.html")
 
-
 # twilio
 # twilio
-# ngrok http 5000
+# ngrok http 8080
 
 ADD_TODO = "add todo"
 UPDATE_TODO = 'update todo'
 DELETE_TODO = "delete todo"
-MARK_COMPLETE = "mark complete"
 LIST_TODO = "list todo"
 START_DATE = "start date"
 DUE_DATE = "due date"
@@ -84,13 +109,16 @@ UPDATE_CALENDAR = "update calendar"
 @APP.route("/bot", methods=["POST"])
 def bot():
     ''' Initialize and run the bot from mobile inputs via Twilio '''
-    start_date = datetime.datetime.now()
-    start_date_est = start_date - datetime.timedelta(hours=5)
+    start_date = datetime.now()
+    start_date_est = start_date - timedelta(hours=5)
     start_date_iso = start_date_est.isoformat()
-    end_date_est = start_date_est + datetime.timedelta(hours=1)
+    end_date_est = start_date_est + timedelta(hours=1)
     end_date_iso = end_date_est.isoformat()
     
-    incoming_msg = request.values.get("Body", "").lower()
+    incoming_msg_orig = request.values.get("Body", "")
+    
+    incoming_msg = incoming_msg_orig.lower()
+    
     phone = request.form["From"]
     person = get_person_object_phone_number(phone)
     user_email = person.email
@@ -102,8 +130,9 @@ def bot():
         msg.body(
             "Hello! I'm the agendasync textbot!"
             + "My know commands are: 'add todo'"
-            + ", 'delete todo, 'list todo'"
-            + ",'start date', and 'due date', 'add calendar'"
+            + ", 'delete todo, 'list todo' "
+            + ",'start date', and 'due date',"
+            + "'add calendar', and 'update calendar'"
         )
         responded = True
 
@@ -112,7 +141,6 @@ def bot():
         add_new_todo_to_db(message_body, user_email)
         msg.body("Inserted: '" + message_body + "' into your todolist!")
         responded = True
-    
         
     if DELETE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
         delete_todo(int(incoming_msg[12:]), user_email)
@@ -121,26 +149,6 @@ def bot():
         
     elif DELETE_TODO in incoming_msg:
         msg.body("Please reply with a todo id to delete: 'delete todo id'\n")
-        msg.body(get_all_todos_values(user_email))
-        responded = True
-        
-    if MARK_COMPLETE in incoming_msg and incoming_msg[14:].isnumeric():
-        delete_todo(int(incoming_msg[14:]), user_email)
-        msg.body("Marking todo id" +incoming_msg[14:] +" complete")
-        responded = True
-        
-    elif MARK_COMPLETE in incoming_msg:
-        msg.body("Please reply with a todo id to mark complete: 'mark complete id'\n")
-        msg.body(get_all_todos_values(user_email))
-        responded = True
-    
-    if UPDATE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
-        update_todo(incoming_msg[12:], user_email, start_date_est, end_date_est)
-        msg.body("Updating todo id " +incoming_msg[12:] +" from your todolist!")
-        responded = True
-        
-    elif UPDATE_TODO in incoming_msg:
-        msg.body("Please reply with a todo id to update: 'update todo id'\n")
         msg.body(get_all_todos_values(user_email))
         responded = True
 
@@ -153,10 +161,30 @@ def bot():
         
     if ADD_CALENDAR in incoming_msg:
         message_body = incoming_msg[13:]
-        msg.body("Added " + message_body + " to your calender")
         event = {'title': message_body, 'date': start_date_iso, 'email': user_email}
+        msg.body("Added " + message_body + " to your calender")
         add_calendar_event(event)
         responded = True
+        
+    if UPDATE_CALENDAR in incoming_msg:    
+        message_body = incoming_msg_orig[16:]
+        msg_array = message_body.split(" ", 1)
+        msg_array[1] = msg_array[1].split(":")
+        
+        if(update_calendar_event(incoming_msg, user_email, message_body) == 'completed event'):
+            msg.body("Replaced event title " + msg_array[1][0] + " with " + msg_array[1][1] + " in your calendar!")
+            responded = True
+        
+        # if "date" in incoming_msg:
+        #     datetimeobject = datetime.strptime(incoming_msg[21:],'%m/%d/%Y %I:%M%p')
+        #     newformat = datetimeobject.strftime('%Y-%m-%d' + 'T' + '%H:%m:%s' + 'Z')
+        #     print(newformat)
+            #event_contents = {'title': message_body[0].strip("'"), 'date': newformat, 'email': message_body[2].strip("'")}
+            
+            #print(event_contents)
+            #add_calendar_event(event_contents)
+            #msg.body("Inserted: '" + message_body + "' into your calendar!")
+            # responded = True
 
     if START_DATE in incoming_msg:
         message_body = incoming_msg[11:]
@@ -250,6 +278,7 @@ def get_person_object_phone_number(phone):
 def get_person_object(email):
     ''' Query person ID from specific person's table, filter by email '''
     some_person = DB.session.query(models.Person).filter_by(email=email).first()
+    print(type(some_person))
     return some_person
 
 
@@ -302,13 +331,6 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
     DB.session.commit()
 
 
-def update_todo(id, user_email, start, end):
-    some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
-    todo = DB.session.query(models.Todo).filter_by(id=id, person=some_person).first()
-    todo.start_todo = start
-    todo.due_date = end
-    DB.session.commit()
-    
 def delete_todo(id, user_email):
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
     DB.session.query(models.Todo).filter_by(id=id, person=some_person).delete(synchronize_session='evaluate')
@@ -326,6 +348,7 @@ def login(data):
             "openid",
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
+            "https://www.googleapis.com/auth/calendar.events",
             "https://www.googleapis.com/auth/calendar",
         ],
         redirect_uri=GOOGLE_URI,
@@ -345,16 +368,26 @@ def login(data):
     )
     profile = requests.get(profileurl)
     profile = profile.json()
-
+    
+    profile_picture = profile['picture']
     user_email = profile["email"]
 
     login_user = "https://calendar.google.com/calendar/embed?src={}&ctz=America%2FNew_York".format(
         user_email
     )
+    
     flask_socketio.emit("googleCalendar", {"url": login_user, "email": user_email})
+    flask_socketio.emit("profilePicture", {"picture": profile_picture})
+    
     calendar_id = result["items"][0]["id"]
 
-    result = service.events().list(calendarId=calendar_id).execute()
+    # result = service.events().list(calendarId=calendar_id).execute()
+    # for i in result["items"]:
+    #     if i['summary'] == 'DANCE!' and i['dateTime'] == '2020-11-29T13:06:19-05:00':
+    #         events = service.events().get(calendarId=calendar_id, eventId=i['id']).execute()
+    #         print(events)
+    #         print("\n")
+    
     # get_all_todos()
     # print(result['items'])
 
