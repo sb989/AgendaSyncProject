@@ -42,7 +42,8 @@ load_dotenv(DOTENV_PATH)
 TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
 TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
 
-GOOGLE_URI = os.environ["GOOGLE_URI"]
+GOOGLE_URI_HTTP = os.environ["GOOGLE_URI_HTTP"]
+GOOGLE_URI_HTTPS = os.environ["GOOGLE_URI_HTTPS"]
 
 DATABASE_URI = os.environ["DATABASE_URL"]
 APP.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
@@ -326,7 +327,12 @@ def get_cred_from_email(email):
 def login(data):
     ''' On client login, authorize/store google auth token then emit google calendar information '''
     auth_code = data["code"]
-    auth_code = data["code"]
+    http_site = data["http"]
+    print(http_site)
+    print(GOOGLE_URI_HTTP)
+    GOOGLE_URI = GOOGLE_URI_HTTPS
+    if http_site:
+        GOOGLE_URI = GOOGLE_URI_HTTP
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         "client_secret.json",
         scopes=[
