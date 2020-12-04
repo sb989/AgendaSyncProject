@@ -2,7 +2,8 @@
 
 import os
 from os.path import join, dirname
-
+import calendar
+import datetime
 from dateutil import parser
 from dateutil import tz
 import datetime
@@ -25,7 +26,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 
 from google.auth.transport.requests import Request
 from apiclient.discovery import build
-
+import calendar_helper_functions as chf
 USERS_UPDATED_CHANNEL = "users updated"
 
 APP = flask.Flask(__name__)
@@ -337,10 +338,16 @@ def delete_todo(id, user_email):
     # DB.session.delete(todo_entry);
     DB.session.commit();
 
+def get_cred_from_email(email):
+    '''returns cred based on email'''
+    person = get_person_object(email)
+    cred = person.cred
+    return cred
 
 @SOCKET_IO.on("login with code")
 def login(data):
     ''' On client login, authorize/store google auth token then emit google calendar information '''
+    auth_code = data["code"]
     auth_code = data["code"]
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         "client_secret.json",
@@ -357,9 +364,6 @@ def login(data):
     flow.fetch_token(code=auth_code)
 
     cred = flow.credentials
-
-    service = build("calendar", "v3", credentials=cred)
-    result = service.calendarList().list().execute()
 
     profileurl = (
         "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token={}".format(
@@ -390,6 +394,8 @@ def login(data):
     
     # get_all_todos()
     # print(result['items'])
+    flask_socketio.emit("email", {"email": user_email})
+
 
     if user_email not in get_all_emails():
         add_new_person_to_db(user_email, cred)
@@ -398,7 +404,68 @@ def login(data):
         print(f"user {user_email} exists")
         update_tokens_in_db(user_email, cred)
 
-    flask_socketio.emit("connected", {"calendarUpdate": result["items"]})
+
+@SOCKET_IO.on("allMonths")
+def send_initial_calendar_info(data):
+    '''sends initial calendar info to the frontend'''
+    print('hi')
+    start_month = data["startMonth"]
+    end_month = data["endMonth"]
+    email = data["email"]
+    cred = get_cred_from_email(email)
+    result = chf.create_update_all_message(cred, start_month, end_month)
+    flask_socketio.emit("calendarInfo", {"events":result})
+
+@SOCKET_IO.on("currentMonth")
+def send_new_calendar_info(data):
+    '''tells client what month to delete and sends information on new month'''
+    curr_month_date = data["currMonth"]
+    prev_month_date = data["prevMonth"]
+    padding = data["padding"]
+    email = data["email"]
+    curr_month_date = parser.isoparse(curr_month_date)
+    prev_month_date = parser.isoparse(prev_month_date)
+    print(curr_month_date)
+    print(padding)
+    cred = get_cred_from_email(email)
+    if not cred or not cred.valid:
+        if cred and cred.expired and cred.refresh_token:
+            cred.refresh(Request())
+            update_tokens_in_db(email, cred)
+    message = {}
+    message_name = ""
+    delta = prev_month_date - curr_month_date
+    if abs(delta) > datetime.timedelta(days=40):
+        curr_month = curr_month_date.month
+        start_month = curr_month - padding
+        end_month = curr_month + padding
+        curr_year = curr_month_date.year
+        if start_month < 1:
+            start_month = start_month + 12
+            start_date = curr_month_date.replace(month=start_month, year=curr_year-1)
+        else:
+            start_date = curr_month_date.replace(month=start_month)
+        if end_month > 12:
+            end_month = end_month - 12
+            end_date = curr_month_date.replace(month=end_month, year=curr_year+1)
+            end_day = (calendar.monthrange(curr_year+1, end_month))[1]
+            end_date = end_date.replace(day=end_day)
+        else:
+            end_date = curr_month_date.replace(month=end_month)
+            end_day = (calendar.monthrange(curr_year, end_month))[1]
+            end_date = end_date.replace(day=end_day)
+        print(start_date)
+        print(end_date)
+        result = chf.create_update_all_message(cred, start_date.isoformat(), end_date.isoformat())
+        message = {"events":result}
+        message_name = "updateAllMonths"
+    else:
+        message = chf.create_update_month_message(cred, curr_month_date, prev_month_date, padding)
+        message_name = "updateMonth"
+    print(message)
+    flask_socketio.emit(message_name, message)
+
+
 
 
 @SOCKET_IO.on("receivePhoneNumber")
@@ -415,35 +482,19 @@ def recieve_phone_number(data):
     DB.session.commit()
     flask_socketio.emit("Server has phone number")
 
-
-@SOCKET_IO.on("login with email")
-def login_with_email(data):
-    ''' On client email login, retrieve email and update credentials before calendar emit '''
-    email = data["email"]
-    user_email = email
-    print(email)
-    login_user = "https://calendar.google.com/calendar/embed?src={}&ctz=America%2FNew_York".format(
-        email
-    )
-    flask_socketio.emit("googleCalendar", {"url": login_user, "email": user_email})
-    person = get_person_object(user_email)
-    cred = person.cred
-    print(cred)
-    print(cred.token)
-    # get_all_todos()
-
-
 @SOCKET_IO.on("addCalendarEvent")
 def add_calendar_event(data):
     ''' Retrieve calendar event from client, insert it into client's google calendar via API '''
     user_email = data["email"]
-    person = get_person_object(user_email)
-    cred = person.cred
+    cred = get_cred_from_email(user_email)
     if not cred or not cred.valid:
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
             update_tokens_in_db(user_email, cred)
     print(data)
+    service = build("calendar", "v3", credentials=cred)
+    calendar = service.calendars().get(calendarId="primary").execute()
+    timeZone = calendar["timeZone"]
     title = data["title"]
     date = data["date"]
     event = {
@@ -452,17 +503,16 @@ def add_calendar_event(data):
         "description": "",
         "start": {
             "dateTime": date,
-            "timeZone": "America/New_York",
+            "timeZone": timeZone,
         },
         "end": {
             "dateTime": date,
-            "timeZone": "America/New_York",
+            "timeZone": timeZone,
         },
         "attendees": [],
         "reminders": {"useDefault": True},
     }
-
-    service = build("calendar", "v3", credentials=cred)
+    print(event)
     event = service.events().insert(calendarId="primary", body=event).execute()
 
 
@@ -481,7 +531,29 @@ def add_todo_list(data):
     add_new_todo_to_db(desc, user_email, start_todo, end_todo)
     # get_all_todos()
 
-
+@SOCKET_IO.on("sendProfile")
+def send_profile(data):
+    '''sends profile info'''
+    email = data["email"]
+    cred = get_cred_from_email(email)
+    if not cred or not cred.valid:
+        if cred and cred.expired and cred.refresh_token:
+            cred.refresh(Request())
+            update_tokens_in_db(email, cred)
+    profileurl = (
+        "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token={}".format(
+            cred.token
+        )
+    )
+    profile = requests.get(profileurl)
+    profile = profile.json()
+    flask_socketio.emit("profile",
+        {
+            "profilePic":profile["picture"],
+            "name":profile["name"]
+            }
+        )
+    
 if __name__ == "__main__":
     init_db(APP)
     SOCKET_IO.run(

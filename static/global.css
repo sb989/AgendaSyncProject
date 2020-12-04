@@ -1,0 +1,156 @@
+.panel {
+  width: 100vw;
+  max-width:100%;
+  min-height: 100px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel-image-overlay {
+  vertical-align: top;
+  width: 100%;
+  opacity: 0;
+}
+
+.panel-overlay {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.panel-header {
+  text-align: center;
+  padding: 55px 0;
+  width: 100%;
+}
+
+.pane {
+  display: table-cell;
+  width: 50%;
+}
+
+.text-pane {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.pane-image {
+  width: 100%;
+}
+
+.pane-text {
+  font-size: 34px;
+  margin: 0;
+}
+
+.white-text {
+  color: #fff;
+}
+
+.center-pane {
+  position: relative;
+  margin: 0 auto;
+  text-align: center;
+  width: 67%;
+  height: 20vw;
+  top: 50%;
+  transform: translateY(-50%);
+  display: table;
+}
+
+/* SVG Icon styles */
+
+.fill-white {
+  fill: #fff;
+}
+
+.icon {
+  height: 70px;
+}
+
+.icon-wrapper {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  line-height: 48px;
+  background: white;
+  border-radius: 50%;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+strong {
+  font-weight: 500;
+}
+
+p {
+  margin: 0;
+}
+
+@media (max-width: 414px) {
+  .hide-xs {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .pane-text {
+    font-size: 14px;
+    padding: 10px 5px;
+  }
+
+  .icon {
+    height: 35px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 972px) {
+  .pane-text {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 992px) {
+  .panel {
+    min-height: initial;
+  }
+}
+
+@media (max-width: 1024px) {
+  .panel-header {
+    padding: 30px 0;
+  }
+}
+
+.splash-video,
+.hooli-video {
+  height: 90vh;
+}
+
+@media (min-width: 1650px) {
+  .splash-video,
+  .hooli-video {
+    width: 100vw;
+    max-width:100%;
+    height: initial;
+  }
+}
+
+@media (min-aspect-ratio: 16/10) {
+  .splash-video,
+  .hooli-video {
+    width: 100vw;
+    max-width:100%;
+    height: auto;
+  }
+}
