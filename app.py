@@ -106,16 +106,15 @@ HELP_ME = "help me"
 ADD_CALENDAR = "add calendar"
 UPDATE_CALENDAR = "update calendar"
 
+start_date = datetime.now()
+start_date_est = start_date - timedelta(hours=5)
+start_date_iso = start_date_est.isoformat()
+end_date_est = start_date_est + timedelta(hours=1)
+end_date_iso = end_date_est.isoformat()
 
 @APP.route("/bot", methods=["POST"])
 def bot():
     ''' Initialize and run the bot from mobile inputs via Twilio '''
-    start_date = datetime.now()
-    start_date_est = start_date - timedelta(hours=5)
-    start_date_iso = start_date_est.isoformat()
-    end_date_est = start_date_est + timedelta(hours=1)
-    end_date_iso = end_date_est.isoformat()
-    
     incoming_msg_orig = request.values.get("Body", "")
     
     incoming_msg = incoming_msg_orig.lower()
