@@ -482,7 +482,7 @@ def send_new_calendar_info(data):
     message = {}
     message_name = ""
     delta = prev_month_date - curr_month_date
-    if abs(delta) > datetime.timedelta(days=40):
+    if abs(delta) > timedelta(days=40):
         curr_month = curr_month_date.month
         start_month = curr_month - padding
         end_month = curr_month + padding

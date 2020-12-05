@@ -58,6 +58,7 @@ export default function AddToDoList(params) {
         </div>
         <div className="row mb-2">
           <div className="input-group-prepend col-2 col-sm-3 col-md-3 col-lg-2 mr-3 mr-md-4 mr-lg-5 mr-xl-3 mb-2 mb-md-0 mb-lg-0">
+            <input type="checkbox" aria-label="Checkbox for following text input"/>
             <span className="input-group-text" id="basic-addon3">End Date</span>
           </div>
           <div className="ml-3 ml-md-0 ml-lg-0">
