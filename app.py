@@ -88,7 +88,7 @@ def update_calendar(incoming_msg, email, message):
                 except:
                     print("Failed to replace event.")
                 
-    if "date" in incoming_msg:
+    if "startdate" in incoming_msg:
         msg_array[1] = msg_array[1].split(":", 1)
         
         firstDate = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
@@ -101,7 +101,6 @@ def update_calendar(incoming_msg, email, message):
         
         for item in result["items"]:
             if item['summary'] == msg_array[1][0]:
-                
                 try:
                     event = service.events().get(calendarId=email, eventId=item['id']).execute()
                     event['start']['dateTime'] = adjustment + event['start']['dateTime'][19:]
@@ -111,7 +110,26 @@ def update_calendar(incoming_msg, email, message):
                     print("Updated date start time")
                     return("completed start date")
                 except:
-                    print("Failed to replace event.")
+                    print("Failed to replace event start date.")
+                    
+    if "enddate" in incoming_msg:
+        msg_array[1] = msg_array[1].split(":", 1)
+        
+        secondDate = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
+        adjustmentTwo = secondDate.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
+        
+        for item in result["items"]:
+            if item['summary'] == msg_array[1][0]:
+                try:
+                    event = service.events().get(calendarId=email, eventId=item['id']).execute()
+                    event['end']['dateTime'] = adjustmentTwo + event['start']['dateTime'][19:]
+                    service.events().update(calendarId=email, eventId=item['id'], body=event).execute()
+                    
+                    print("Updated date end time")
+                    return("completed end date")
+                except:
+                    print("Failed to replace event end date.")
+    
 
 @APP.route("/", methods=["GET", "POST"])
 def hello():
@@ -211,6 +229,13 @@ def bot():
             # adjustment = firstDate.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
             
             msg.body("Replaced start date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
+            responded = True
+            
+        elif(update_calendar(incoming_msg, user_email, message_body) == 'completed end date'):
+            msg_array = message_body.split(" ", 1)
+            msg_array[1] = msg_array[1].split(":", 1)
+            
+            msg.body("Replaced end date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
             responded = True
         
         # if "date" in incoming_msg:
