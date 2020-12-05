@@ -262,8 +262,8 @@ def bot():
         message_body = incoming_msg_orig[16:]
         
         if(update_calendar_event(incoming_msg, user_email, message_body) == 'completed event'):
-            # msg_array = message_body.split(" ", 1)
-            # msg_array[1] = msg_array[1].split(":")
+            msg_array = message_body.split(" ", 1)
+            msg_array[1] = msg_array[1].split(":")
             
             msg.body("Replaced event title '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
             responded = True
