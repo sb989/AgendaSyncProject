@@ -61,15 +61,7 @@ def init_db(APP):
     # models.createModels()
     DB.session.commit()
     
-<<<<<<< HEAD
 def update_calendar(incoming_msg, email, message):
-=======
-def update_calendar_event(incoming_msg, email, message):
-    msg_array = message.split(" ", 1)
-    msg_array[1] = msg_array[1].split(":")
-    print(msg_array)
-        
->>>>>>> fa75aa3c5bf2913d63d2dab84f71909461053617
     person = get_person_object(email)
     cred = person.cred
         
@@ -81,7 +73,6 @@ def update_calendar_event(incoming_msg, email, message):
     service = build("calendar", "v3", credentials=cred)
     result = service.events().list(calendarId=email).execute()
     
-<<<<<<< HEAD
     msg_array = message.split(" ", 1)
     
     if "event" in incoming_msg:
@@ -141,18 +132,6 @@ def update_calendar_event(incoming_msg, email, message):
                 except:
                     print("Failed to replace event end date.")
     
-=======
-    if "event" in incoming_msg:
-        for item in result["items"]:
-            if item['summary'] == msg_array[1][0]:
-                event = service.events().get(calendarId=email, eventId=item['id']).execute()
-                event['summary'] = msg_array[1][1]
-                service.events().update(calendarId=email, eventId=item['id'], body=event).execute()
-                print("Replaced event")
-                return("completed event")
-    
-
->>>>>>> fa75aa3c5bf2913d63d2dab84f71909461053617
 
 @APP.route("/", methods=["GET", "POST"])
 def hello():
@@ -184,23 +163,10 @@ end_date_iso = end_date_est.isoformat()
 @APP.route("/bot", methods=["POST"])
 def bot():
     ''' Initialize and run the bot from mobile inputs via Twilio '''
-<<<<<<< HEAD
-    start_date = datetime.now()
-    start_date_est = start_date - timedelta(hours=5)
-    start_date_iso = start_date_est.isoformat()
-    end_date_est = start_date_est + timedelta(hours=1)
-    end_date_iso = end_date_est.isoformat()
-    
     incoming_msg_orig = request.values.get("Body", "")
     
     incoming_msg = incoming_msg_orig.lower()
     
-=======
-    incoming_msg_orig = request.values.get("Body", "")
-    
-    incoming_msg = incoming_msg_orig.lower()
-    
->>>>>>> fa75aa3c5bf2913d63d2dab84f71909461053617
     phone = request.form["From"]
     person = get_person_object_phone_number(phone)
     user_email = person.email
@@ -213,16 +179,10 @@ def bot():
         msg.body(
             "Hello! I'm the agendasync textbot!"
             + "My know commands are: 'add todo'"
-<<<<<<< HEAD
-            + ", 'delete todo, 'list todo' "
-            + ",'start date', and 'due date',"
-            + "'add calendar', and 'update calendar'"
-=======
             + ", add todo endless, mark complete"
             + ", 'delete todo, 'list todo' "
             + ",'start date', and 'due date',"
             + "'add calendar', and 'update calendar event'"
->>>>>>> fa75aa3c5bf2913d63d2dab84f71909461053617
         )
         responded = True
 
@@ -282,7 +242,6 @@ def bot():
         add_calendar_event(event)
         responded = True
         
-<<<<<<< HEAD
     if UPDATE_CALENDAR in incoming_msg:    
         message_body = incoming_msg_orig[16:]
         
@@ -297,9 +256,6 @@ def bot():
             msg_array = message_body.split(" ", 1)
             msg_array[1] = msg_array[1].split(":", 1)
             
-            # firstDate = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
-            # adjustment = firstDate.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
-            
             msg.body("Replaced start date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
             responded = True
             
@@ -308,27 +264,7 @@ def bot():
             msg_array[1] = msg_array[1].split(":", 1)
             
             msg.body("Replaced end date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
-=======
-    if UPDATE_CALENDAR in incoming_msg:
-        message_body = incoming_msg_orig[16:]
-        msg_array = message_body.split(" ", 1)
-        msg_array[1] = msg_array[1].split(":")
-        
-        if(update_calendar_event(incoming_msg, user_email, message_body) == 'completed event'):
-            msg.body("Replaced event title " + msg_array[1][0] + " with " + msg_array[1][1] + " in your calendar!")
->>>>>>> fa75aa3c5bf2913d63d2dab84f71909461053617
             responded = True
-        
-        # if "date" in incoming_msg:
-        #     datetimeobject = datetime.strptime(incoming_msg[21:],'%m/%d/%Y %I:%M%p')
-        #     newformat = datetimeobject.strftime('%Y-%m-%d' + 'T' + '%H:%m:%s' + 'Z')
-        #     print(newformat)
-            #event_contents = {'title': message_body[0].strip("'"), 'date': newformat, 'email': message_body[2].strip("'")}
-            
-            #print(event_contents)
-            #add_calendar_event(event_contents)
-            #msg.body("Inserted: '" + message_body + "' into your calendar!")
-            # responded = True
 
     if START_DATE in incoming_msg:
         message_body = incoming_msg[11:]
@@ -552,27 +488,11 @@ def login(data):
     profile = requests.get(profileurl)
     profile = profile.json()
     
-<<<<<<< HEAD
-    profile_picture = profile['picture']
-    user_email = profile["email"]
-
-    login_user = "https://calendar.google.com/calendar/embed?src={}&ctz=America%2FNew_York".format(
-        user_email
-    )
-    
-    flask_socketio.emit("googleCalendar", {"url": login_user, "email": user_email})
-    flask_socketio.emit("profilePicture", {"picture": profile_picture})
-    
-    calendar_id = result["items"][0]["id"]
-
-=======
     user_email = profile["email"]
 
             
     flask_socketio.emit("email", {"email": user_email})
 
-
->>>>>>> fa75aa3c5bf2913d63d2dab84f71909461053617
     if user_email not in get_all_emails():
         add_new_person_to_db(user_email, cred)
         flask_socketio.emit("getPhoneNumber")
