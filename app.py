@@ -150,7 +150,7 @@ def bot():
     elif ADD_TODO in incoming_msg:
         message_body = incoming_msg[9:]
         add_new_todo_to_db(message_body, user_email)
-        msg.body("Inserted: '" + message_body + "' into your todolist with a due date of " +end_date_est )
+        msg.body("Inserted: '" + message_body + "' into your todolist with a due date of tomorrow")
         responded = True
         
     if DELETE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
