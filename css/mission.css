@@ -1,0 +1,63 @@
+/* Mission section */
+
+/* Changing the world section */
+.mission-panels.panel-header {
+  background-color: #dfdfdf;
+}
+
+.changing-the-world {
+  background-image: url("https://images.unsplash.com/photo-1468276311594-df7cb65d8df6?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80");
+}
+
+.changing-the-world-text-pane {
+  height: 100%;
+  width: 100%;
+  display: table;
+  text-align: center;
+}
+
+.changing-the-world-text {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+/* Bigger than our innovations section */
+.bigger-than-our-innovations {
+  background-image: url("https://images.unsplash.com/photo-1567177662154-dfeb4c93b6ae?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1000&q=80");
+}
+
+.bigger-than-our-innovations-text-pane {
+  background: #fff;
+}
+
+.bigger-than-our-innovations-text {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+/* Collective accolades section */
+.collective-accolades {
+  background-image: url("https://images.unsplash.com/photo-1443397646383-16272048780e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1567&q=80");
+}
+
+.collective-accolades-text-pane {
+  position: absolute;
+  left: 50%;
+  width: 50%;
+  height: inherit;
+  display: table;
+}
+
+.collective-accolades-text {
+  display: table-cell;
+  vertical-align: middle;
+  padding-right: 100px;
+}
+
+@media (max-width: 400px) {
+  .changing-the-world-text > span {
+    display: block;
+    margin: 0 auto;
+    width: 200px;
+  }
+}

@@ -9,17 +9,20 @@ export default function GoogleButton(params) {
   // console.log(clientId);
   function success(response) {
     const { code } = response;
+    var http = false;
+    if (window.location.protocol == 'http:') { 
+      
+      http = true; 
+    }  
     if (code !== undefined) {
       Socket.emit('login with code', {
         code,
+        http,
       });
     } else {
       const { email } = response.profileObj;
       params.setEmail(email);
-      Socket.emit('login with email',
-        {
-          email,
-        });// after login; every page refresh rerturns profile instead
+     
     }
     params.setAuthenticated(true);
     params.setCode(code);
@@ -40,15 +43,22 @@ export default function GoogleButton(params) {
       email,
       profilePic,
     });
-    params.setEmail('');
-    params.setAuthenticated(false);
+    
+    let mounted = true;
+    if(mounted)
+    {
+      params.setAuthenticated(false);
+    }
+    return () => mounted = false;
+    
+    
   }
 
   if (!params.authenticated) {
     return (
       <GoogleLogin
         className="googleLoginButton"
-        clientId={clientId}
+        clientId="25700182333-kan1soef90krqdbho3mogdbr35k4fpd6.apps.googleusercontent.com"
         buttonText="Log in with Google"
         onSuccess={success}
         onFailure={failure}
@@ -64,12 +74,18 @@ export default function GoogleButton(params) {
 
   return (
     <GoogleLogout
-      className="googleLogoutButton"
-      isSignedIn={false}
-      clientId={clientId}
-      buttonText="Logout"
-      onLogoutSuccess={logout}
-      onFailure={failure}
+    className="googleLogoutButton"
+    isSignedIn={false}
+    clientId="25700182333-kan1soef90krqdbho3mogdbr35k4fpd6.apps.googleusercontent.com"
+    buttonText="Logout"
+    render={renderProps => (
+      <button className="btn btn-ligh col" onClick={renderProps.onClick} disabled={renderProps.disabled}>Logout</button>
+    )}
+    onLogoutSuccess={logout}
+    onFailure={failure}
+
     />
+
+    
   );
 }
