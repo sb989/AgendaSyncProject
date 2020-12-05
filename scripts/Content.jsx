@@ -9,17 +9,24 @@ export function Content() {
   const [email, setEmail] = React.useState('');
   const [profilePic, setProfilePic] = React.useState(''); //Corresponds to line in app.py: flask_socketio.emit("profilePicture", {"picture": profile_picture})
   const [code, setCode] = React.useState('');
-  const [userURL, setUserURL] = React.useState('');
 
   let page;
 
-  function getUserURL() {
+  function getEmail() {
     React.useEffect(() => {
-      Socket.on('googleCalendar', (data) => {
-        setUserURL(data.url);
+      Socket.on('email', (data) => {
         setEmail(data.email);
       });
     });
+  }
+
+  function getProfile(){
+    React.useEffect(()=>{
+      Socket.on('profile',(data)=>{
+        setProfilePic(data.profilePic);
+        setName(data.name);
+      });
+    })
   }
 
   function selectPage() {
@@ -30,11 +37,10 @@ export function Content() {
           setAuthenticated,
           setName,
           setEmail,
-          setProfilePic,
+          profilePic,
           authenticated,
           name,
           email,
-          userURL,
         },
       );// placeholder for actual calendar page
     } else {
@@ -52,7 +58,8 @@ export function Content() {
     }
   }
   selectPage();
-  getUserURL();
+  getEmail();
+  getProfile();
   return (
     <div>
       {page}

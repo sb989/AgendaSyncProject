@@ -1,0 +1,57 @@
+.mountain-text-pane {
+  position: absolute;
+  left: 20%;
+  top: 30%;
+}
+
+.mountain-text {
+  color: #fff;
+}
+
+.mountain-svg {
+  position: absolute;
+  bottom: -2vw;
+  left: -12vw;
+  width: 112vw;
+}
+
+.footer {
+  background-color: #4dadfe;
+  height: 300px;
+}
+
+.footer-icons {
+  text-align: center;
+  margin-top: 50px;
+  font-size: 24px;
+}
+
+.footer-icons > a {
+  text-decoration: none;
+}
+
+.footer-icon {
+  background: #fff;
+  color: #4dadfe;
+  border-radius: 50%;
+}
+
+.footer-text-pane {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: table;
+  text-align: center;
+}
+
+.footer-text {
+  display: table-cell;
+  vertical-align: middle;
+  color: #fff;
+  font-size: 16px;
+  font-weight: lighter;
+}
+
+.footer-text a {
+  cursor: pointer;
+}
