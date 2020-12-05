@@ -393,6 +393,18 @@ def check_todo(user_email):
             delete_todo(todo.id, user_email)
     DB.session.commit();
     print("checked for outdated todos")
+    
+def check_reminders(user_email):
+    person = get_person_object(user_email)
+    all_todos = DB.session.query(models.Todo).filter_by(person_id=person.id).all()
+    current_date = datetime.now()
+    current_date_est = current_date - timedelta(hours=5)
+    for todo in all_todos:
+        reminder_time = todo.due_date - timedelta(minutes=10)
+        if current_date_est == reminder_time:
+            print("the todo")
+            print(todo)
+            return todo
 
 def get_cred_from_email(email):
     '''returns cred based on email'''
@@ -492,7 +504,7 @@ def send_new_calendar_info(data):
     message = {}
     message_name = ""
     delta = prev_month_date - curr_month_date
-    if abs(delta) > datetime.timedelta(days=40):
+    if abs(delta) > timedelta(days=40):
         curr_month = curr_month_date.month
         start_month = curr_month - padding
         end_month = curr_month + padding
