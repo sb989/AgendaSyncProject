@@ -66,23 +66,25 @@ export default function ToDoList(params) {
     }
     console.log(splitMessage);
     return (
-      <div className="row">
-        <div className="col-4">
-          {
-            splitMessage
-          }
-        </div>
-        <div className="col-4">
-          {' endTime: '}
-          {todo["due_date"]}
+      <div className="row mb-3 px-3">
+        <div className="col-8">
+          <div className="container border rounded">
+            <div className="row">
+              {
+                splitMessage
+              }
+            </div>
+            <div className="row">
+              {' Due Date: '}
+              {todo["due_date"]}
+            </div>
+          </div>
         </div>
         <div className="col-2">
           <button className="btn" type="button" id={props.index} onClick={()=>deleteMessage(props.index)}>
           <span className="oi oi-check" title="check" aria-hidden="true"></span>
           </button>
-        </div>
-        
-        
+        </div> 
       </div>
     );
   }

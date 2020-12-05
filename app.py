@@ -464,17 +464,18 @@ def add_calendar_event(data):
     calendar = service.calendars().get(calendarId="primary").execute()
     timeZone = calendar["timeZone"]
     title = data["title"]
-    date = data["date"]
+    start = data["start"]
+    end = data["end"]
     event = {
         "summary": title,
         "location": "",
         "description": "",
         "start": {
-            "dateTime": date,
+            "dateTime": start,
             "timeZone": timeZone,
         },
         "end": {
-            "dateTime": date,
+            "dateTime": end,
             "timeZone": timeZone,
         },
         "attendees": [],
