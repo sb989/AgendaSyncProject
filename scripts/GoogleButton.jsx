@@ -9,10 +9,15 @@ export default function GoogleButton(params) {
   // console.log(clientId);
   function success(response) {
     const { code } = response;
-    
+    var http = false;
+    if (window.location.protocol == 'http:') { 
+      
+      http = true; 
+    }  
     if (code !== undefined) {
       Socket.emit('login with code', {
         code,
+        http,
       });
     } else {
       const { email } = response.profileObj;

@@ -40,6 +40,7 @@
     "babel": "^6.23.0",
     "bootstrap": "^4.5.3",
     "dotenv": "^8.2.0",
+    "is-image-url": "^1.1.8",
     "luxon": "^1.25.0",
     "ngrok": "^3.3.0",
     "react-calendar": "^3.2.1",
