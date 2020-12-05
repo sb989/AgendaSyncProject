@@ -99,6 +99,7 @@ def hello():
 ADD_TODO = "add todo"
 UPDATE_TODO = 'update todo'
 DELETE_TODO = "delete todo"
+MARK_COMPLETE = "mark complete"
 LIST_TODO = "list todo"
 START_DATE = "start date"
 DUE_DATE = "due date"
@@ -151,6 +152,26 @@ def bot():
         msg.body("Please reply with a todo id to delete: 'delete todo id'\n")
         msg.body(get_all_todos_values(user_email))
         responded = True
+        
+    if MARK_COMPLETE in incoming_msg and incoming_msg[14:].isnumeric():
+        delete_todo(int(incoming_msg[14:]), user_email)
+        msg.body("Marking todo id" +incoming_msg[14:] +" complete")
+        responded = True
+        
+    elif MARK_COMPLETE in incoming_msg:
+        msg.body("Please reply with a todo id to mark complete: 'mark complete id'\n")
+        msg.body(get_all_todos_values(user_email))
+        responded = True
+    
+    if UPDATE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
+        update_todo(incoming_msg[12:], user_email, start_date_est, end_date_est)
+        msg.body("Updating todo id " +incoming_msg[12:] +" from your todolist!")
+        responded = True
+        
+    elif UPDATE_TODO in incoming_msg:
+        msg.body("Please reply with a todo id to update: 'update todo id'\n")
+        msg.body(get_all_todos_values(user_email))
+        responded = True
 
     if LIST_TODO in incoming_msg:
         msg.body(
@@ -166,7 +187,7 @@ def bot():
         add_calendar_event(event)
         responded = True
         
-    if UPDATE_CALENDAR in incoming_msg:    
+    if UPDATE_CALENDAR in incoming_msg:
         message_body = incoming_msg_orig[16:]
         msg_array = message_body.split(" ", 1)
         msg_array[1] = msg_array[1].split(":")
@@ -328,6 +349,14 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
     else:
         todo_entry = models.Todo(todo=todo, person=some_person, start_todo=start, due_date=end)
     DB.session.add(todo_entry)
+    DB.session.commit()
+    
+
+def update_todo(id, user_email, start, end):
+    some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
+    todo = DB.session.query(models.Todo).filter_by(id=id, person=some_person).first()
+    todo.start_todo = start
+    todo.due_date = end
     DB.session.commit()
 
 
