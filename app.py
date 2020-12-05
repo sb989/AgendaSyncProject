@@ -97,6 +97,7 @@ def hello():
 # ngrok http 8080
 
 ADD_TODO = "add todo"
+ADD_TODO_ENDLESS = "add todo endless"
 UPDATE_TODO = 'update todo'
 DELETE_TODO = "delete todo"
 MARK_COMPLETE = "mark complete"
@@ -125,22 +126,30 @@ def bot():
     user_email = person.email
     resp = MessagingResponse()
     msg = resp.message()
+    check_todo(user_email)
     responded = False
     
     if HELP_ME in incoming_msg:
         msg.body(
             "Hello! I'm the agendasync textbot!"
             + "My know commands are: 'add todo'"
+            + ", add todo endless, mark complete"
             + ", 'delete todo, 'list todo' "
             + ",'start date', and 'due date',"
-            + "'add calendar', and 'update calendar'"
+            + "'add calendar', and 'update calendar event'"
         )
         responded = True
 
-    if ADD_TODO in incoming_msg:
+    if ADD_TODO_ENDLESS in incoming_msg:
+        message_body = incoming_msg[17:]
+        add_new_todo_to_db_endless(message_body, user_email, start_date_est, datetime.max)
+        msg.body("Inserted: '" + message_body + "' into your todolist with no due date!")
+        responded = True 
+
+    elif ADD_TODO in incoming_msg:
         message_body = incoming_msg[9:]
         add_new_todo_to_db(message_body, user_email)
-        msg.body("Inserted: '" + message_body + "' into your todolist!")
+        msg.body("Inserted: '" + message_body + "' into your todolist with a due date of " +end_date_est )
         responded = True
         
     if DELETE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
@@ -230,6 +239,7 @@ def bot():
             "The due date of the event '" + message_body + "' is "
         )  # database query would go here
         responded = True
+        
     if not responded:
         msg.body("I'm not sure I understand that, could you try again?")
     return str(resp)
@@ -351,6 +361,13 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
     DB.session.add(todo_entry)
     DB.session.commit()
     
+def add_new_todo_to_db_endless(todo, user_email, start, end):
+    ''' Query person's database, add (start/end date optional) new todos to database from client '''
+    some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
+    todo_entry = models.Todo(todo=todo, person=some_person, start_todo=start, due_date=end)
+    DB.session.add(todo_entry)
+    DB.session.commit()
+    
 
 def update_todo(id, user_email, start, end):
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
@@ -365,6 +382,17 @@ def delete_todo(id, user_email):
     DB.session.query(models.Todo).filter_by(id=id, person=some_person).delete(synchronize_session='evaluate')
     # DB.session.delete(todo_entry);
     DB.session.commit();
+    
+def check_todo(user_email):
+    person = get_person_object(user_email)
+    all_todos = DB.session.query(models.Todo).filter_by(person_id=person.id).all()
+    current_date = datetime.now()
+    current_date_est = current_date - timedelta(hours=5)
+    for todo in all_todos:
+        if todo.due_date < current_date_est:
+            delete_todo(todo.id, user_email)
+    DB.session.commit();
+    print("checked for outdated todos")
 
 def get_cred_from_email(email):
     '''returns cred based on email'''
