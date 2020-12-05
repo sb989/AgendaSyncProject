@@ -61,6 +61,22 @@ def init_db(APP):
     # models.createModels()
     DB.session.commit()
     
+def update_calendar_event(incoming_msg, email, message):
+    msg_array = message.split(" ", 1)
+    msg_array[1] = msg_array[1].split(":")
+    print(msg_array)
+        
+    person = get_person_object(email)
+    cred = person.cred
+        
+    if not cred or not cred.valid:
+        if cred and cred.expired and cred.refresh_token:
+            cred.refresh(Request())
+            update_tokens_in_db(email, cred)
+            
+    service = build("calendar", "v3", credentials=cred)
+    result = service
+
 def update_calendar(incoming_msg, email, message):
     person = get_person_object(email)
     cred = person.cred
@@ -245,26 +261,26 @@ def bot():
     if UPDATE_CALENDAR in incoming_msg:    
         message_body = incoming_msg_orig[16:]
         
-        if(update_calendar(incoming_msg, user_email, message_body) == 'completed event'):
-            msg_array = message_body.split(" ", 1)
-            msg_array[1] = msg_array[1].split(":")
+        if(update_calendar_event(incoming_msg, user_email, message_body) == 'completed event'):
+            # msg_array = message_body.split(" ", 1)
+            # msg_array[1] = msg_array[1].split(":")
             
             msg.body("Replaced event title '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
             responded = True
         
-        elif(update_calendar(incoming_msg, user_email, message_body) == 'completed start date'):
-            msg_array = message_body.split(" ", 1)
-            msg_array[1] = msg_array[1].split(":", 1)
+        # elif(update_calendar_event(incoming_msg, user_email, message_body) == 'completed start date'):
+        #     msg_array = message_body.split(" ", 1)
+        #     msg_array[1] = msg_array[1].split(":", 1)
             
-            msg.body("Replaced start date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
-            responded = True
+        #     msg.body("Replaced start date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
+        #     responded = True
             
-        elif(update_calendar(incoming_msg, user_email, message_body) == 'completed end date'):
-            msg_array = message_body.split(" ", 1)
-            msg_array[1] = msg_array[1].split(":", 1)
+        # elif(update_calendar_event(incoming_msg, user_email, message_body) == 'completed end date'):
+        #     msg_array = message_body.split(" ", 1)
+        #     msg_array[1] = msg_array[1].split(":", 1)
             
-            msg.body("Replaced end date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
-            responded = True
+        #     msg.body("Replaced end date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
+        #     responded = True
 
     if START_DATE in incoming_msg:
         message_body = incoming_msg[11:]
