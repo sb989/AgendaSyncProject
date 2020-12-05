@@ -410,8 +410,6 @@ def login(data):
     ''' On client login, authorize/store google auth token then emit google calendar information '''
     auth_code = data["code"]
     http_site = data["http"]
-    print(http_site)
-    print(GOOGLE_URI_HTTP)
     GOOGLE_URI = GOOGLE_URI_HTTPS
     if http_site:
         GOOGLE_URI = GOOGLE_URI_HTTP
