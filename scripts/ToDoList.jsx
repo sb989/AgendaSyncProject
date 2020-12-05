@@ -117,7 +117,7 @@ export default function ToDoList(params) {
           }
       </div>
 
-      <img alt="Wall-EBot" className="center" src="https://cdn.dribbble.com/users/37530/screenshots/2937858/drib_blink_bot.gif" />
+      <img alt="Wall-EBot" className="robot" src="https://cdn.dribbble.com/users/37530/screenshots/2937858/drib_blink_bot.gif" />
     </div>
 
   );

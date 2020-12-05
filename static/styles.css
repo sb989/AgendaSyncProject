@@ -7,6 +7,11 @@ body{
     display:flex;
 }
 
+.robot{
+  width:16vmax;
+  height:auto;
+  object-fit: scale-down;
+}
 .agendaSyncLogo{
     width:18vmin;
     height:auto;
