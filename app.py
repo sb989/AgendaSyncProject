@@ -60,7 +60,7 @@ def init_db(APP):
     # models.createModels()
     DB.session.commit()
     
-def update_calendar(incoming_msg, email, message):
+def update_calendar_event(incoming_msg, email, message):
     person = get_person_object(email)
     cred = person.cred
         
@@ -159,6 +159,11 @@ start_date_iso = start_date_est.isoformat()
 end_date_est = start_date_est + timedelta(hours=1)
 end_date_iso = end_date_est.isoformat()
 
+def check_empty_argument(msg, command, message):
+    if message == "":
+        msg.body("Please provide an argument to the command: '" + command + "'")
+        return(True)
+
 @APP.route("/bot", methods=["POST"])
 def bot():
     ''' Initialize and run the bot from mobile inputs via Twilio '''
@@ -181,51 +186,57 @@ def bot():
             + ", add todo endless, mark complete"
             + ", 'delete todo, 'list todo' "
             + ",'start date', and 'due date',"
-            + "'add calendar', and 'update calendar event'"
+            + "'add calendar', and 'update calendar [event/date]'"
         )
         responded = True
 
     if ADD_TODO_ENDLESS in incoming_msg:
         message_body = incoming_msg[17:]
-        add_new_todo_to_db_endless(message_body, user_email, start_date_est, datetime.max)
-        msg.body("Inserted: '" + message_body + "' into your todolist with no due date!")
-        responded = True 
+        if(check_empty_argument(msg, ADD_TODO_ENDLESS, message_body)):
+            responded = True
+        else:
+            add_new_todo_to_db_endless(message_body, user_email, start_date_est, datetime.max)
+            msg.body("Inserted: '" + message_body + "' into your todolist with no due date!")
+            responded = True 
 
     elif ADD_TODO in incoming_msg:
         message_body = incoming_msg[9:]
-        add_new_todo_to_db(message_body, user_email)
-        msg.body("Inserted: '" + message_body + "' into your todolist with a due date of tomorrow")
-        responded = True
-        
-    if DELETE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
-        delete_todo(int(incoming_msg[12:]), user_email)
-        msg.body("Deleting from your todolist!")
-        responded = True
-        
-    elif DELETE_TODO in incoming_msg:
-        msg.body("Please reply with a todo id to delete: 'delete todo id'\n")
-        msg.body(get_all_todos_values(user_email))
-        responded = True
-        
-    if MARK_COMPLETE in incoming_msg and incoming_msg[14:].isnumeric():
-        delete_todo(int(incoming_msg[14:]), user_email)
-        msg.body("Marking todo id" +incoming_msg[14:] +" complete")
-        responded = True
-        
-    elif MARK_COMPLETE in incoming_msg:
-        msg.body("Please reply with a todo id to mark complete: 'mark complete id'\n")
-        msg.body(get_all_todos_values(user_email))
-        responded = True
+        if(check_empty_argument(msg, ADD_TODO, message_body)):
+            responded = True
+        else:
+            add_new_todo_to_db(message_body, user_email)
+            msg.body("Inserted: '" + message_body + "' into your todolist with a due date of tomorrow")
+            responded = True
     
-    if UPDATE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
-        update_todo(incoming_msg[12:], user_email, start_date_est, end_date_est)
-        msg.body("Updating todo id " +incoming_msg[12:] +" from your todolist!")
-        responded = True
-        
-    elif UPDATE_TODO in incoming_msg:
-        msg.body("Please reply with a todo id to update: 'update todo id'\n")
-        msg.body(get_all_todos_values(user_email))
-        responded = True
+    if DELETE_TODO in incoming_msg:
+        if(incoming_msg[12:].isnumeric() == False):
+            msg.body("Please reply with a todo id to delete: 'delete todo id'\n")
+            msg.body(get_all_todos_values(user_email))
+            responded = True
+        else:
+            delete_todo(int(incoming_msg[12:]), user_email)
+            msg.body("Deleting 'id " + incoming_msg[12:] + "' from your todolist!")
+            responded = True
+    
+    if MARK_COMPLETE in incoming_msg:
+        if(incoming_msg[14:].isnumeric() == False):
+            msg.body("Please reply with a todo id to mark complete: 'mark complete id'\n")
+            msg.body(get_all_todos_values(user_email))
+            responded = True
+        else:
+            delete_todo(int(incoming_msg[14:]), user_email)
+            msg.body("Marking todo 'id " + incoming_msg[14:] + "' complete")
+            responded = True
+            
+    if UPDATE_TODO in incoming_msg:
+        if(incoming_msg[12:].isnumeric() == False):
+            msg.body("Please reply with a todo id to update: 'update todo id'\n")
+            msg.body(get_all_todos_values(user_email))
+            responded = True
+        else:
+            update_todo(incoming_msg[12:], user_email, start_date_est, end_date_est)
+            msg.body("Updating todo id " + incoming_msg[12:] +" from your todolist!")
+            responded = True
 
     if LIST_TODO in incoming_msg:
         msg.body(
@@ -236,15 +247,34 @@ def bot():
         
     if ADD_CALENDAR in incoming_msg:
         message_body = incoming_msg[13:]
-        event = {'title': message_body, 'date': start_date_iso, 'email': user_email}
-        msg.body("Added " + message_body + " to your calender")
-        add_calendar_event(event)
-        responded = True
+        if(check_empty_argument(msg, ADD_CALENDAR, message_body)):
+            responded = True
+        else:
+            event = {'title': message_body, 'start': start_date_iso, 'email': user_email, 'end':end_date_iso}
+            add_calendar_event(event)
+            msg.body("Added " + message_body + " to your calender")
+            responded = True
+            
+    if DUE_DATE in incoming_msg:
+        message_body = incoming_msg[9:]
+        if(check_empty_argument(msg, DUE_DATE, message_body)):
+            responded = True
+        else:
+            date = due_date_todo(int(incoming_msg[9:]), user_email)
+            msg.body("The due date of the event id '" + message_body + "' is " + str(date))
+            responded = True
+            
+    if START_DATE in incoming_msg:
+        message_body = incoming_msg[11:]
+        if(check_empty_argument(msg, START_DATE, message_body)):
+            responded = True
+        else:
+            date = start_date_todo(int(incoming_msg[11:]), user_email)
+            msg.body("The start date of the event id '" + message_body + "' is " + str(date))
+            responded = True
         
     if UPDATE_CALENDAR in incoming_msg:    
         message_body = incoming_msg_orig[16:]
-        print(user_email)
-        
         if(update_calendar(incoming_msg, user_email, message_body) == 'completed event'):
             msg_array = message_body.split(" ", 1)
             msg_array[1] = msg_array[1].split(":")
@@ -265,31 +295,7 @@ def bot():
             
             msg.body("Replaced end date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
             responded = True
-
-    if START_DATE in incoming_msg:
-        message_body = incoming_msg[11:]
-        # query for message_body in todolist table
-        # if message_body not in table:
-        # msg.body("The event '" + message_body "' cannot be found in your todo list!")
-        # responded = True
-        # dbQuery = DB.query
-        msg.body(
-            "The start date of the event '" + message_body + "' is: "
-        )  # database query would go here
-        responded = True
-
-    if DUE_DATE in incoming_msg:
-        message_body = incoming_msg[9:]
-        # query for message_body in todolist table
-        # if message_body not in table:
-        # msg.body("The event '" + message_body "' cannot be found in your todo list!")
-        # responded = True
-        # dbQuery = DB.query
-        msg.body(
-            "The due date of the event '" + message_body + "' is "
-        )  # database query would go here
-        responded = True
-        
+            
     if not responded:
         msg.body("I'm not sure I understand that, could you try again?")
     return str(resp)
@@ -404,7 +410,6 @@ def get_all_todos(data):
     flask_socketio.emit("sending todo info", message)
     print(message)
 
-
 def add_new_todo_to_db(todo, user_email, start="", end=""):
     ''' Query person's database, add (start/end date optional) new todos to database from client '''
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
@@ -422,7 +427,6 @@ def add_new_todo_to_db_endless(todo, user_email, start, end):
     DB.session.add(todo_entry)
     DB.session.commit()
     
-
 def update_todo(id, user_email, start, end):
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
     todo = DB.session.query(models.Todo).filter_by(id=id, person=some_person).first()
@@ -430,12 +434,25 @@ def update_todo(id, user_email, start, end):
     todo.due_date = end
     DB.session.commit()
 
-
 def delete_todo(id, user_email):
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
     DB.session.query(models.Todo).filter_by(id=id, person=some_person).delete(synchronize_session='evaluate')
     # DB.session.delete(todo_entry);
     DB.session.commit();
+
+def start_date_todo(id, user_email):
+    some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
+    todo = DB.session.query(models.Todo).filter_by(id=id, person=some_person).first()
+    start = todo.start_todo
+    DB.session.commit()
+    return(start)
+ 
+def due_date_todo(id, user_email):
+    some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
+    todo = DB.session.query(models.Todo).filter_by(id=id, person=some_person).first()
+    end = todo.due_date
+    DB.session.commit()
+    return(end)
     
 def check_todo(user_email):
     person = get_person_object(user_email)
@@ -470,7 +487,6 @@ def login(data):
             "openid",
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
-            "https://www.googleapis.com/auth/calendar.events",
             "https://www.googleapis.com/auth/calendar",
         ],
         redirect_uri=GOOGLE_URI,
@@ -487,10 +503,11 @@ def login(data):
     )
     profile = requests.get(profileurl)
     profile = profile.json()
+    
     user_email = profile["email"]
+
             
     flask_socketio.emit("email", {"email": user_email})
-
 
     if user_email not in get_all_emails():
         add_new_person_to_db(user_email, cred)

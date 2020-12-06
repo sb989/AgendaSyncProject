@@ -58,7 +58,7 @@ export default function GoogleButton(params) {
     return (
       <GoogleLogin
         className="googleLoginButton"
-        clientId="25700182333-kan1soef90krqdbho3mogdbr35k4fpd6.apps.googleusercontent.com"
+        clientId={clientId}
         buttonText="Log in with Google"
         onSuccess={success}
         onFailure={failure}
@@ -76,7 +76,7 @@ export default function GoogleButton(params) {
     <GoogleLogout
     className="googleLogoutButton"
     isSignedIn={false}
-    clientId="25700182333-kan1soef90krqdbho3mogdbr35k4fpd6.apps.googleusercontent.com"
+    clientId={clientId}
     buttonText="Logout"
     render={renderProps => (
       <button className="btn btn-ligh col" onClick={renderProps.onClick} disabled={renderProps.disabled}>Logout</button>
