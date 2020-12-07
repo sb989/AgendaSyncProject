@@ -1,19 +1,41 @@
 import * as React from 'react';
 import DatePicker from 'react-datepicker';
+import Socket from './Socket';
 import 'react-datepicker/dist/react-datepicker.css';
 
 export default function EditCalendarEvent(params)
 {
     const { event } = params;
+    const { email } = params;
+    const { index } = params;
+    const { day } = params;
+    const { month } = params;
     const { DateTime } = require("luxon");
     var summary = event["summary"];
     var start = event["start"];
     var end = event["end"];
+    var id = event["id"];
     start = DateTime.fromISO(start);
     end = DateTime.fromISO(end);
     const [input, setInput] = React.useState(summary);
     const [editStartTime,setEditStartTime] = React.useState(start.toJSDate());
     const [editEndTime,setEditEndTime] = React.useState(end.toJSDate());
+
+    function sendEditCalendarEvent(e)
+    {
+        e.preventDefault();
+        Socket.emit("editCalendarEvent",{
+            "summary":input,
+            "start":editStartTime.toISOString(),
+            "end":editEndTime.toISOString(),
+            "eventId":id,
+            "email":email,
+            "index":index,
+            "day":day,
+            "month":month,
+        });
+    }
+
     return(
         <div className="container">
             <form>
@@ -26,7 +48,7 @@ export default function EditCalendarEvent(params)
                         className="form-control col-12 ml-sm-0"
                         id="calendarEventTitle"
                         name="calendarEventTitle"
-                        onInput={setInput}
+                        onChange={(inp)=>setInput(inp.target.value)}
                         value={input}
                     />
                 </div>
@@ -56,6 +78,12 @@ export default function EditCalendarEvent(params)
                     className="btn btn-light"
                     />
                 </div>
+
+            <div className="row">
+                <button className="btn btn-primary ml-3" data-dismiss="modal" type="submit" onClick={sendEditCalendarEvent}>
+                    Submit
+                </button>
+            </div>
             </form>
         </div>
     );

@@ -29,6 +29,9 @@ export default function UserCalendar(params) {
     var eventsForDay = calendarEvent[month][day];
     var event;
     var events = [];
+    console.log(eventsForDay);
+    if(eventsForDay.length == 0 )
+      return events;
     for (event of eventsForDay)
     {
       var start = event["start"];
@@ -151,8 +154,8 @@ export default function UserCalendar(params) {
     var day = date.getDate();
     var eventsForDay = calendarEvent[month][day];
     console.log(eventsForDay);
-    var contents = eventsForDay.map((event)=>(
-      React.createElement(PopupCalendarEvent,{"event":event},)
+    var contents = eventsForDay.map((event,index)=>(
+      React.createElement(PopupCalendarEvent,{event,index,day,month},)
     ));
     setpopUpContents(contents);
     date = DateTime.fromJSDate(date);
@@ -164,6 +167,9 @@ export default function UserCalendar(params) {
   function PopupCalendarEvent(params)
   {
     var event = params.event;
+    var index = params.index;
+    var day = params.day;
+    var month = params.month;
     var summary = event["summary"];
     var start = event["start"];
     var end = event["end"];
@@ -186,7 +192,7 @@ export default function UserCalendar(params) {
             </div>
           </div>
           <div className="col-2">
-            <button className="btn btn-secondary" type="button" onClick={()=>editEvent(event)}>
+            <button className="btn btn-secondary" type="button" onClick={()=>editEvent(event,index,day,month)}>
                 <span className="oi oi-pencil" title="pencil" aria-hidden="true"></span>
             </button>
           </div>
@@ -197,19 +203,58 @@ export default function UserCalendar(params) {
     );
   }
 
-  function editEvent(event)
+  function editEvent(event,index,day,month)
   {
     setModalTitle("Edit Event");
-    var edit = React.createElement(EditCalendarEvent,{"event":event},);
+    var edit = React.createElement(EditCalendarEvent,{
+      "event":event,"email":email,
+      "index":index,"day":day,
+      "month":month,    
+    },);
     setpopUpContents(edit);
   }
   
-
+  function calendarUpdated()
+  {
+    React.useEffect(()=>
+    {
+      if(calendarEvent == "")
+          return;
+      Socket.on("calendarUpdated",(data)=>{
+        console.log('update');
+        var start = data["start"];
+        var end = data["end"];
+        var summary = data["summary"];
+        var index = data["index"];
+        var eventId = data["eventId"];
+        var month = data["month"];
+        var day = data["day"];
+        start = DateTime.fromISO(start);
+        
+        let tempCalEvent = JSON.parse(JSON.stringify(calendarEvent));
+        console.log(tempCalEvent);
+        tempCalEvent[month][day].splice(index,1);
+        var event = {
+          "start":data["start"],
+          "end":end,
+          "summary":summary,
+          "id":eventId,
+        }
+        console.log(event);
+        console.log(month);
+        console.log(day);
+        tempCalEvent[start.month-1][start.day].push(event);
+        console.log(tempCalEvent);
+        setCalendarEvent(tempCalEvent);
+      });
+    },[calendarEvent])
+  }
 
   askForInitialCalendarInfo()
   receiveCalendar();
   updateCalendarMonth();
   updateAllLoadedMonths();
+  calendarUpdated();
   return (
   <div className="container-fluid">
     <Calendar
