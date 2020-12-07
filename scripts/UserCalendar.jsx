@@ -1,15 +1,19 @@
 import * as React from 'react';
 import Calendar from 'react-calendar';
-import Socket from './Socket';
 import { v4 as uuidv4 } from 'uuid';
+import EditCalendarEvent from './EditCalendarEvent';
+import Socket from './Socket';
+
+
 export default function UserCalendar(params) {
-  const [value, onChange] = React.useState(new Date());
+  const [value, setValue] = React.useState(new Date());
   const [calendarEvent,setCalendarEvent] = React.useState("");
   const [currentMonth,setCurrentMonth] = React.useState('');
   const { DateTime } = require("luxon");
   const { email } = params;
-
-
+  const [popUpContents,setpopUpContents] = React.useState("");
+  const [modalTitle,setModalTitle] = React.useState("");
+  
   function selectEventsForTile(data)//parses calendar info to display on calendar gui
   {
     var date = data["date"];
@@ -34,8 +38,6 @@ export default function UserCalendar(params) {
       end = DateTime.fromISO(end);
       var startTime = start.toLocaleString(DateTime.TIME_SIMPLE);
       var endTime = end.toLocaleString(DateTime.TIME_SIMPLE);
-      var duration = startTime + "-" + endTime;
-      var eventInfo = duration + ": "+summary;
       var abbreventInfo = startTime + ": "+summary.slice(0,20)
       var key = uuidv4();
       var element = React.createElement("span",{"className":"event","key":key},abbreventInfo);
@@ -141,6 +143,68 @@ export default function UserCalendar(params) {
         });
     },[]);
   }
+  
+  function onClick(date)
+  {
+    setValue(date);
+    var month = date.getMonth();
+    var day = date.getDate();
+    var eventsForDay = calendarEvent[month][day];
+    console.log(eventsForDay);
+    var contents = eventsForDay.map((event)=>(
+      React.createElement(PopupCalendarEvent,{"event":event},)
+    ));
+    setpopUpContents(contents);
+    date = DateTime.fromJSDate(date);
+    var title = date.toLocaleString(DateTime.DATE_HUGE);
+    setModalTitle(title);
+    $("#exampleModal").modal("toggle");
+  }
+
+  function PopupCalendarEvent(params)
+  {
+    var event = params.event;
+    var summary = event["summary"];
+    var start = event["start"];
+    var end = event["end"];
+    start = DateTime.fromISO(start);
+    end = DateTime.fromISO(end);
+    start = start.toLocaleString(DateTime.DATETIME_FULL);
+    end = end.toLocaleString(DateTime.DATETIME_FULL);
+    return (
+      <div>
+        <div className="row">
+          <div className="col-10 container border rounded pt-1 px-4 mb-3">
+            <div className="row">
+              Summary: {summary}
+            </div>
+            <div className="row">
+              Start Date: {start}
+            </div>
+            <div className="row">
+              End Date: {end}
+            </div>
+          </div>
+          <div className="col-2">
+            <button className="btn btn-secondary" type="button" onClick={()=>editEvent(event)}>
+                <span className="oi oi-pencil" title="pencil" aria-hidden="true"></span>
+            </button>
+          </div>
+          
+        </div>
+      </div>
+      
+    );
+  }
+
+  function editEvent(event)
+  {
+    setModalTitle("Edit Event");
+    var edit = React.createElement(EditCalendarEvent,{"event":event},);
+    setpopUpContents(edit);
+  }
+  
+
 
   askForInitialCalendarInfo()
   receiveCalendar();
@@ -150,12 +214,33 @@ export default function UserCalendar(params) {
   <div className="container-fluid">
     <Calendar
       className="col"
-      onChange={onChange}
+      onChange={onClick}
       value={value}
       tileContent={selectEventsForTile}
       minDetail="month"
       onActiveStartDateChange={changeMonth}
     />
+      <div className="modal fade" id="exampleModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="exampleModalLabel">{modalTitle}</h5>
+              <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="container">
+                {popUpContents}
+              </div>
+            </div>
+            <div className="modal-footer">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
   </div>
   );
 }

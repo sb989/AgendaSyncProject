@@ -408,8 +408,8 @@ def get_all_todos(data):
     for todo in all_todos:
         todos.append({
             "todo":todo.todo,
-            "start_todo":str(todo.start_todo),
-            "due_date":str(todo.due_date),
+            "start_todo":todo.start_todo.isoformat(),
+            "due_date":todo.due_date.isoformat(),
             "id":todo.id
             })
         # todos.append(todo.todo)
