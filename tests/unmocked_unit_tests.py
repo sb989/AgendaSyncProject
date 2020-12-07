@@ -24,10 +24,10 @@ class AgendaSyncTestCase(unittest.TestCase):
         self.success_test_params_checkPhoneNo = [
             {
                 KEY_INPUT: {
-                    "phone": "908-391-6492",
+                    "phone": "650-667-6737",
                     "email": "zfh4@njit.edu"
                 },
-                KEY_EXPECTED: "908-391-6492"
+                KEY_EXPECTED: "650-667-6737"
             }
         ]
         
