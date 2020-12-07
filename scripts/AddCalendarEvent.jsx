@@ -51,30 +51,28 @@ export default function AddCalendarEvent(params) {
           <div className="input-group-prepend col-3 col-sm-2  mr-sm-3 mr-md-5 mr-xl-4 mb-2 mb-md-0 mb-lg-0">
             <span className="input-group-text" id="basic-addon2">Start Date</span>
           </div>
-          <div className="ml-3 ml-sm-0">
-            <DatePicker
-            selected={date}
-            onSelect={setStartDate} // when day is clicked
-            onChange={setStartDate} // only when value has changed
-            timeIntervals="1"
-            showTimeSelect
-            />
-          </div>
+          <DatePicker
+          selected={date}
+          onSelect={setStartDate} // when day is clicked
+          onChange={setStartDate} // only when value has changed
+          timeIntervals="10"
+          showTimeSelect
+          className="btn btn-light col-10 ml-3 ml-sm-0"
+          />
           
         </div>
         <div className="row mb-2">
           <div className="input-group-prepend col-3 col-sm-2  mr-sm-3 mr-md-5 mr-xl-4 mb-2 mb-md-0 mb-lg-0">
             <span className="input-group-text" id="basic-addon2">Start Date</span>
           </div>
-          <div className="ml-3 ml-sm-0">
-            <DatePicker
-            selected={endDate}
-            onSelect={setEndDate} // when day is clicked
-            onChange={setEndDate} // only when value has changed
-            timeIntervals="1"
-            showTimeSelect
-            />
-          </div>
+          <DatePicker
+          selected={endDate}
+          onSelect={setEndDate} // when day is clicked
+          onChange={setEndDate} // only when value has changed
+          timeIntervals="10"
+          showTimeSelect
+          className="btn btn-light col-10 ml-3 ml-sm-0"
+          />
           
         </div>
         <div className="row">

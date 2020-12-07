@@ -75,18 +75,79 @@ def update_calendar_event(incoming_msg, email, message):
             update_tokens_in_db(email, cred)
             
     service = build("calendar", "v3", credentials=cred)
+    result = service
+
+def update_calendar(incoming_msg, email, message):
+    person = get_person_object(email)
+    cred = person.cred
+        
+    if not cred or not cred.valid:
+        if cred and cred.expired and cred.refresh_token:
+            cred.refresh(Request())
+            update_tokens_in_db(email, cred)
+            
+    service = build("calendar", "v3", credentials=cred)
     result = service.events().list(calendarId=email).execute()
     
+    msg_array = message.split(" ", 1)
+    
     if "event" in incoming_msg:
+        msg_array[1] = msg_array[1].split(":")
+        
         for item in result["items"]:
             if item['summary'] == msg_array[1][0]:
-                event = service.events().get(calendarId=email, eventId=item['id']).execute()
-                event['summary'] = msg_array[1][1]
-                service.events().update(calendarId=email, eventId=item['id'], body=event).execute()
-                print("Replaced event")
-                return("completed event")
+                try:
+                    event = service.events().get(calendarId=email, eventId=item['id']).execute()
+                    event['summary'] = msg_array[1][1]
+                    service.events().update(calendarId=email, eventId=item['id'], body=event).execute()
+                    
+                    print("Replaced event")
+                    return("completed event")
+                except:
+                    print("Failed to replace event.")
+                
+    if "startdate" in incoming_msg:
+        msg_array[1] = msg_array[1].split(":", 1)
+        
+        firstDate = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
+        firstDatePad = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
+        firstDatePad = firstDatePad + timedelta(hours=1)
+        
+        adjustment = firstDate.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
+        adjustmentPad = firstDatePad.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
+        print(adjustmentPad)
+        
+        for item in result["items"]:
+            if item['summary'] == msg_array[1][0]:
+                try:
+                    event = service.events().get(calendarId=email, eventId=item['id']).execute()
+                    event['start']['dateTime'] = adjustment + event['start']['dateTime'][19:]
+                    event['end']['dateTime'] = adjustmentPad + event['start']['dateTime'][19:]
+                    service.events().update(calendarId=email, eventId=item['id'], body=event).execute()
+                    
+                    print("Updated date start time")
+                    return("completed start date")
+                except:
+                    print("Failed to replace event start date.")
+                    
+    if "enddate" in incoming_msg:
+        msg_array[1] = msg_array[1].split(":", 1)
+        
+        secondDate = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
+        adjustmentTwo = secondDate.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
+        
+        for item in result["items"]:
+            if item['summary'] == msg_array[1][0]:
+                try:
+                    event = service.events().get(calendarId=email, eventId=item['id']).execute()
+                    event['end']['dateTime'] = adjustmentTwo + event['start']['dateTime'][19:]
+                    service.events().update(calendarId=email, eventId=item['id'], body=event).execute()
+                    
+                    print("Updated date end time")
+                    return("completed end date")
+                except:
+                    print("Failed to replace event end date.")
     
-
 
 @APP.route("/", methods=["GET", "POST"])
 def hello():
@@ -143,14 +204,14 @@ def bot():
 
     if ADD_TODO_ENDLESS in incoming_msg:
         message_body = incoming_msg[17:]
-        add_new_todo_to_db_endless(message_body, user_email, start_date_est, datetime.max)
+        add_new_todo_to_db_endless(message_body, user_email, start_date_est)
         msg.body("Inserted: '" + message_body + "' into your todolist with no due date!")
         responded = True 
 
     elif ADD_TODO in incoming_msg:
         message_body = incoming_msg[9:]
         add_new_todo_to_db(message_body, user_email)
-        msg.body("Inserted: '" + message_body + "' into your todolist with a due date of " +end_date_est )
+        msg.body("Inserted: '" + message_body + "' into your todolist with a due date of tomorrow")
         responded = True
         
     if DELETE_TODO in incoming_msg and incoming_msg[12:].isnumeric():
@@ -192,30 +253,34 @@ def bot():
         
     if ADD_CALENDAR in incoming_msg:
         message_body = incoming_msg[13:]
-        event = {'title': message_body, 'date': start_date_iso, 'email': user_email}
+        event = {'title': message_body, 'start': start_date_iso, 'email': user_email, 'end':end_date_iso}
         msg.body("Added " + message_body + " to your calender")
         add_calendar_event(event)
         responded = True
         
-    if UPDATE_CALENDAR in incoming_msg:
+    if UPDATE_CALENDAR in incoming_msg:    
         message_body = incoming_msg_orig[16:]
-        msg_array = message_body.split(" ", 1)
-        msg_array[1] = msg_array[1].split(":")
         
-        if(update_calendar_event(incoming_msg, user_email, message_body) == 'completed event'):
-            msg.body("Replaced event title " + msg_array[1][0] + " with " + msg_array[1][1] + " in your calendar!")
+        if(update_calendar(incoming_msg, user_email, message_body) == 'completed event'):
+            msg_array = message_body.split(" ", 1)
+            msg_array[1] = msg_array[1].split(":")
+            
+            msg.body("Replaced event title '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
             responded = True
         
-        # if "date" in incoming_msg:
-        #     datetimeobject = datetime.strptime(incoming_msg[21:],'%m/%d/%Y %I:%M%p')
-        #     newformat = datetimeobject.strftime('%Y-%m-%d' + 'T' + '%H:%m:%s' + 'Z')
-        #     print(newformat)
-            #event_contents = {'title': message_body[0].strip("'"), 'date': newformat, 'email': message_body[2].strip("'")}
+        elif(update_calendar(incoming_msg, user_email, message_body) == 'completed start date'):
+            msg_array = message_body.split(" ", 1)
+            msg_array[1] = msg_array[1].split(":", 1)
             
-            #print(event_contents)
-            #add_calendar_event(event_contents)
-            #msg.body("Inserted: '" + message_body + "' into your calendar!")
-            # responded = True
+            msg.body("Replaced start date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
+            responded = True
+            
+        elif(update_calendar(incoming_msg, user_email, message_body) == 'completed end date'):
+            msg_array = message_body.split(" ", 1)
+            msg_array[1] = msg_array[1].split(":", 1)
+            
+            msg.body("Replaced end date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
+            responded = True
 
     if START_DATE in incoming_msg:
         message_body = incoming_msg[11:]
@@ -366,8 +431,9 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
     DB.session.add(todo_entry)
     DB.session.commit()
     
-def add_new_todo_to_db_endless(todo, user_email, start, end):
+def add_new_todo_to_db_endless(todo, user_email, start):
     ''' Query person's database, add (start/end date optional) new todos to database from client '''
+    end = datetime.max
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
     todo_entry = models.Todo(todo=todo, person=some_person, start_todo=start, due_date=end)
     DB.session.add(todo_entry)
@@ -440,7 +506,6 @@ def login(data):
 
             
     flask_socketio.emit("email", {"email": user_email})
-
 
     if user_email not in get_all_emails():
         add_new_person_to_db(user_email, cred)
@@ -570,11 +635,15 @@ def add_todo_list(data):
     start_todo = data["startDate"]  # currently both times are in UTC
     end_todo = data["endDate"]
     desc = data["description"]
+    endless = data["endless"]
     start_todo = parser.isoparse(start_todo)
     end_todo = parser.isoparse(end_todo)
     print(start_todo)
     print(end_todo)
-    add_new_todo_to_db(desc, user_email, start_todo, end_todo)
+    if endless:
+        add_new_todo_to_db_endless(desc,user_email,start_todo)
+    else:
+        add_new_todo_to_db(desc, user_email, start_todo, end_todo)
     # get_all_todos()
 
 @SOCKET_IO.on("sendProfile")

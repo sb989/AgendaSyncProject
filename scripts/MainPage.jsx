@@ -65,8 +65,9 @@ export default function MainPage(params) {
               className="agendaSyncLogo"
               alt="Responsive image"> 
             </img>
-            <div className="col col-md col-xl pt-2">
-              <p className="d-none d-md-block text-right">Welcome, {name}</p>
+            
+            <div className="col col-md col-xl pt-2 d-flex align-items-end justify-content-end">
+              <p className="d-none d-md-block mb-0">Welcome, {name}</p>
             </div>
             
             <div className="col-4 col-sm-2">
