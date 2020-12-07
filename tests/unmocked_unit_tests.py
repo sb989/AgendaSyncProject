@@ -110,14 +110,14 @@ class AgendaSyncTestCase(unittest.TestCase):
         
         self.assertEqual(expected, bring_message)
     
-    def test_parse_message_success_addphonenum(self):
-        for test in self.success_test_params_checkPhoneNo:
-            expected = test[KEY_EXPECTED]
-            with mock.patch("app.get_person_object") as obj:
-                app.recieve_phone_number(test[KEY_INPUT])
-                bring_message="908-391-6492"
+#     def test_parse_message_success_addphonenum(self):
+#         for test in self.success_test_params_checkPhoneNo:
+#             expected = test[KEY_EXPECTED]
+#             with mock.patch("app.get_person_object") as obj:
+#                 app.recieve_phone_number(test[KEY_INPUT])
+#                 bring_message="650-667-6737"
             
-        self.assertEqual(expected, bring_message)
+#         self.assertEqual(expected, bring_message)
                 
         
             
