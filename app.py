@@ -6,14 +6,10 @@ import calendar
 import datetime
 from dateutil import parser
 from dateutil import tz
-<<<<<<< HEAD
-import time
-=======
 import datetime
 import schedule 
 import time 
 
->>>>>>> textbotReminders
 # from datetime import *
 
 import flask
