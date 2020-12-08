@@ -89,16 +89,19 @@ def update_calendar_event(incoming_msg, email, message):
                 except:
                     print("Failed to replace event.")
                 
-    if "startdate" in incoming_msg:
+    elif "startdate" in incoming_msg:
         msg_array[1] = msg_array[1].split(":", 1)
         
-        firstDate = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
-        firstDatePad = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
-        firstDatePad = firstDatePad + timedelta(hours=1)
-        
-        adjustment = firstDate.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
-        adjustmentPad = firstDatePad.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
-        print(adjustmentPad)
+        try:
+            firstDate = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
+            firstDatePad = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
+            firstDatePad = firstDatePad + timedelta(hours=1)
+            
+            adjustment = firstDate.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
+            adjustmentPad = firstDatePad.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
+            print(adjustmentPad)
+        except:
+            return("Please provide proper date format")
         
         for item in result["items"]:
             if item['summary'] == msg_array[1][0]:
@@ -113,11 +116,14 @@ def update_calendar_event(incoming_msg, email, message):
                 except:
                     print("Failed to replace event start date.")
                     
-    if "enddate" in incoming_msg:
+    elif "enddate" in incoming_msg:
         msg_array[1] = msg_array[1].split(":", 1)
         
-        secondDate = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
-        adjustmentTwo = secondDate.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
+        try:
+            secondDate = datetime.strptime(msg_array[1][1],'%m/%d/%Y %I:%M%p')
+            adjustmentTwo = secondDate.strftime('%Y-%m-%d' + 'T' + '%H:%M:%S')
+        except:
+            return("Please provide proper date format")
         
         for item in result["items"]:
             if item['summary'] == msg_array[1][0]:
@@ -129,7 +135,9 @@ def update_calendar_event(incoming_msg, email, message):
                     print("Updated date end time")
                     return("completed end date")
                 except:
-                    print("Failed to replace event end date.")
+                    return("Failed to replace event end date.")
+    else:
+        return("Please provide proper format")
     
 
 @APP.route("/", methods=["GET", "POST"])
@@ -275,21 +283,27 @@ def bot():
         
     if UPDATE_CALENDAR in incoming_msg:    
         message_body = incoming_msg_orig[16:]
-        if(update_calendar_event(incoming_msg, user_email, message_body) == 'completed event'):
+        correct_responses = ['completed event', 'completed start date', 'completed end date']
+        
+        if(update_calendar_event(incoming_msg, user_email, message_body) not in correct_responses):
+            msg.body(update_calendar_event(incoming_msg, user_email, message_body))
+            responded = True
+        
+        elif(update_calendar_event(incoming_msg, user_email, message_body) == correct_responses[0]):
             msg_array = message_body.split(" ", 1)
             msg_array[1] = msg_array[1].split(":")
             
             msg.body("Replaced event title '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
             responded = True
         
-        elif(update_calendar_event(incoming_msg, user_email, message_body) == 'completed start date'):
+        elif(update_calendar_event(incoming_msg, user_email, message_body) == correct_responses[1]):
             msg_array = message_body.split(" ", 1)
             msg_array[1] = msg_array[1].split(":", 1)
             
             msg.body("Replaced start date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
             responded = True
             
-        elif(update_calendar_event(incoming_msg, user_email, message_body) == 'completed end date'):
+        elif(update_calendar_event(incoming_msg, user_email, message_body) == correct_responses[2]):
             msg_array = message_body.split(" ", 1)
             msg_array[1] = msg_array[1].split(":", 1)
             
