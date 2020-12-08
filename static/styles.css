@@ -28,6 +28,9 @@ body{
     border-radius: .25rem; 
 }
 
+.navrow{
+  width:100%;
+}
 .todopicture{
   width:auto;
   height:5vmax;

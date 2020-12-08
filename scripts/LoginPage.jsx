@@ -161,18 +161,7 @@ export default function LoginPage(params) {
     
     </div>
     
-    <div id="section1" className="loginBox">
-      <img className="logo" src="https://dewey.tailorbrands.com/production/brand_version_mockup_image/304/4167981304_a6db7ea3-9908-4d0b-b315-1ed7c9167b14.png?cb=1605992586" alt="agenda" />
-      <br />
-      <GoogleButton
-        setAuthenticated={setAuthenticated}
-        setName={setName}
-        setEmail={setEmail}
-        setProfilePic={setProfilePic}
-        authenticated={authenticated}
-        setCode={setCode}
-      />
-    </div>
+    
     </div>
   );
 }

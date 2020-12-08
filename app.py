@@ -6,7 +6,7 @@ import calendar
 import datetime
 from dateutil import parser
 from dateutil import tz
-
+import time
 # from datetime import *
 
 import flask
@@ -52,6 +52,7 @@ APP.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 DB = flask_sqlalchemy.SQLAlchemy(APP)
 
 import models
+
 
 def init_db(APP):
     ''' initialize the database '''

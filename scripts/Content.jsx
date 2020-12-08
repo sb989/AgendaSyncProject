@@ -2,7 +2,7 @@ import * as React from 'react';
 import Socket from './Socket';
 import LoginPage from './LoginPage';
 import MainPage from './MainPage';
-
+import GoogleButton from './GoogleButton';
 export function Content() {
   const [authenticated, setAuthenticated] = React.useState(false);
   const [name, setName] = React.useState('');
@@ -18,6 +18,75 @@ export function Content() {
         setEmail(data.email);
       });
     });
+  }
+
+  function loginButton(){
+    if(authenticated)
+    {
+      return (
+        <nav className="navbar navbar-light bg-light">
+          <div className="container-fluid">
+            <div className="row navrow p-3">
+              <div className="navbar-brand" href="#">
+                <img 
+                  src="../static/agenda_sync_logo.png" 
+                  className="agendaSyncLogo"
+                  alt="Responsive image"> 
+                </img>
+              </div>
+              <div className="col col-md col-xl pt-2 d-flex align-items-end justify-content-end">
+                  <p className="d-none d-md-block mb-0">Welcome, {name}</p>
+              </div>
+              <div className="col-4 col-sm-2">
+                <button 
+                  type="button" 
+                  className="btn" 
+                  data-toggle="dropdown" 
+                  aria-haspopup="true" 
+                  aria-expanded="false"
+                  >
+                  <img className="profilePic" src={profilePic} alt="profilePic"></img>
+                </button>
+                <div className="dropdown-menu dropdown-menu-left">
+                  <a className="dropdown-item px-0" href="#">
+                    <GoogleButton 
+                      setAuthenticated={setAuthenticated}
+                      setName={setName}
+                      setEmail={setEmail}
+                      authenticated={authenticated}
+                    />
+                  </a>
+                </div>
+         
+              </div>
+            </div>
+          
+          </div>
+        </nav>
+    );}
+    else{
+      return(
+        <nav className="navbar fixed-top navbar-light bg-light">
+        <div className="container-fluid">
+          <div className="navbar-brand" href="#">
+            <img 
+              src="../static/agenda_sync_logo.png" 
+              className="agendaSyncLogo"
+              alt="Responsive image"> 
+            </img>
+          </div>
+          <GoogleButton 
+            setAuthenticated={setAuthenticated}
+            setName={setName}
+            setEmail={setEmail}
+            authenticated={authenticated}
+          />
+          
+        </div>
+      </nav>
+      
+      );
+    }
   }
 
   function getProfile(){
@@ -62,6 +131,7 @@ export function Content() {
   getProfile();
   return (
     <div>
+      {loginButton()}
       {page}
     </div>
   );

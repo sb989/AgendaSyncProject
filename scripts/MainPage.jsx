@@ -58,7 +58,7 @@ export default function MainPage(params) {
   removePhoneForm();
   return (
     <div className="m-3">
-      <div className="container-fluid ">
+      {/* <div className="container-fluid ">
         <div className="row p-3">
           <img 
             src="../static/agenda_sync_logo.png" 
@@ -92,11 +92,10 @@ export default function MainPage(params) {
             </div>
           </div>
           
-        </div>       
-        <div className="d-block d-md-none">
+        </div> */}      
+      <div className="d-block d-md-none">
           <p >Welcome, {name}</p>
-        </div>
-      </div>     
+      </div>
       {selected}
       <div className="container mt-3">
         <div className="row justify-content-center">
