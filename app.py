@@ -397,8 +397,8 @@ def get_all_todos(data):
     for todo in all_todos:
         todos.append({
             "todo":todo.todo,
-            "start_todo":str(todo.start_todo),
-            "due_date":str(todo.due_date),
+            "start_todo":todo.start_todo.isoformat(),
+            "due_date":todo.due_date.isoformat(),
             "id":todo.id
             })
         # todos.append(todo.todo)
@@ -421,6 +421,7 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
     
 def add_new_todo_to_db_endless(todo, user_email, start, end):
     ''' Query person's database, add (start/end date optional) new todos to database from client '''
+    
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
     todo_entry = models.Todo(todo=todo, person=some_person, start_todo=start, due_date=end)
     DB.session.add(todo_entry)
@@ -475,8 +476,6 @@ def login(data):
     ''' On client login, authorize/store google auth token then emit google calendar information '''
     auth_code = data["code"]
     http_site = data["http"]
-    print(http_site)
-    print(GOOGLE_URI_HTTP)
     GOOGLE_URI = GOOGLE_URI_HTTPS
     if http_site:
         GOOGLE_URI = GOOGLE_URI_HTTP
@@ -524,6 +523,10 @@ def send_initial_calendar_info(data):
     end_month = data["endMonth"]
     email = data["email"]
     cred = get_cred_from_email(email)
+    if not cred or not cred.valid:
+        if cred and cred.expired and cred.refresh_token:
+            cred.refresh(Request())
+            update_tokens_in_db(email, cred)
     result = chf.create_update_all_message(cred, start_month, end_month)
     flask_socketio.emit("calendarInfo", {"events":result})
 
@@ -627,20 +630,55 @@ def add_calendar_event(data):
     print(event)
     event = service.events().insert(calendarId="primary", body=event).execute()
 
+@SOCKET_IO.on("editCalendarEvent")
+def edit_calendar_event(data):
+    print(data)
+    event_id = data["eventId"]
+    email = data["email"]
+    summary = data["summary"]
+    start = data["start"]
+    end = data["end"]
+    index = data["index"]
+    cred = get_cred_from_email(email)
+    if not cred or not cred.valid:
+        if cred and cred.expired and cred.refresh_token:
+            cred.refresh(Request())
+            update_tokens_in_db(email, cred)
+    service = build("calendar", "v3", credentials=cred)
+    event = service.events().get(calendarId='primary', eventId=event_id).execute()
+    event["summary"] = summary
+    event["start"]["dateTime"] = start
+    event["end"]["dateTime"] = end
+    update = service.events().update(calendarId="primary", eventId=event_id, body=event).execute()
+    event_id = update["id"]
+    flask_socketio.emit("calendarUpdated", {
+        "start":start,
+        "end":end,
+        "summary":summary,
+        "eventId":event_id,
+        "index":index,
+        "day":data["day"],
+        "month":data["month"]
+    })
 
 @SOCKET_IO.on("addToDoList")
 def add_todo_list(data):
     ''' Retrieve todolist update event from client, insert it into server-side database '''
-    print(data)
+    #print(data)
     user_email = data["email"]
     start_todo = data["startDate"]  # currently both times are in UTC
     end_todo = data["endDate"]
     desc = data["description"]
+    endless = data["endless"]
     start_todo = parser.isoparse(start_todo)
     end_todo = parser.isoparse(end_todo)
-    print(start_todo)
-    print(end_todo)
-    add_new_todo_to_db(desc, user_email, start_todo, end_todo)
+    #print(start_todo)
+    #print(end_todo)
+    if endless:
+        add_new_todo_to_db_endless(desc, user_email, start_todo, datetime.max)
+    else:
+        add_new_todo_to_db(desc, user_email, start_todo, end_todo)
+    # get_all_todos()
 
 @SOCKET_IO.on("sendProfile")
 def send_profile(data):

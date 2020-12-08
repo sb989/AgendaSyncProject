@@ -35,10 +35,11 @@ export default function AddForm(params) {
     setUpDefault();
   },[])
   return (
-    <div className="container">
+    <div className="container-fluid">
+      <h1 className="text-logocolor">Add Event</h1>
       <div className ="row">
-        <div className="col-0 col-md-2"></div>
-        <div className="col">
+        <div className="col-0 col-md-3"></div>
+        <div className="col col-md-9">
           <form>
             <div className="btn-group btn-group-toggle" data-toggle="buttons">
               <label className="btn btn-primary ">

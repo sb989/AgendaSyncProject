@@ -1,15 +1,19 @@
 import * as React from 'react';
 import Calendar from 'react-calendar';
-import Socket from './Socket';
 import { v4 as uuidv4 } from 'uuid';
+import EditCalendarEvent from './EditCalendarEvent';
+import Socket from './Socket';
+
+
 export default function UserCalendar(params) {
-  const [value, onChange] = React.useState(new Date());
+  const [value, setValue] = React.useState(new Date());
   const [calendarEvent,setCalendarEvent] = React.useState("");
   const [currentMonth,setCurrentMonth] = React.useState('');
   const { DateTime } = require("luxon");
   const { email } = params;
-
-
+  const [popUpContents,setpopUpContents] = React.useState("");
+  const [modalTitle,setModalTitle] = React.useState("");
+  
   function selectEventsForTile(data)//parses calendar info to display on calendar gui
   {
     var date = data["date"];
@@ -25,6 +29,9 @@ export default function UserCalendar(params) {
     var eventsForDay = calendarEvent[month][day];
     var event;
     var events = [];
+    // console.log(eventsForDay);
+    if(eventsForDay.length == 0 )
+      return events;
     for (event of eventsForDay)
     {
       var start = event["start"];
@@ -34,8 +41,6 @@ export default function UserCalendar(params) {
       end = DateTime.fromISO(end);
       var startTime = start.toLocaleString(DateTime.TIME_SIMPLE);
       var endTime = end.toLocaleString(DateTime.TIME_SIMPLE);
-      var duration = startTime + "-" + endTime;
-      var eventInfo = duration + ": "+summary;
       var abbreventInfo = startTime + ": "+summary.slice(0,20)
       var key = uuidv4();
       var element = React.createElement("span",{"className":"event","key":key},abbreventInfo);
@@ -55,13 +60,16 @@ export default function UserCalendar(params) {
         var month = parseInt(data["addMonth"],10);
         var events = data["addEvents"][month];
         var deleteMonth = data["deleteMonth"];
-        if(calendarEvent[month] != undefined)
-        {
-          // console.log("dont update!");
-          return;
-        }
-          
+        // if(calendarEvent[month] != undefined)
+        // {
+        //   // console.log("dont update!");
+        //   return;
+        // }
+        
         console.log("add");
+        console.log(month);
+        console.log('delete');
+        console.log(deleteMonth);
         console.log(calendarEvent);
         let tempCalEvent = JSON.parse(JSON.stringify(calendarEvent));
         tempCalEvent[month] = events;
@@ -141,21 +149,139 @@ export default function UserCalendar(params) {
         });
     },[]);
   }
+  
+  function onClick(date)
+  {
+    setValue(date);
+    var month = date.getMonth();
+    var day = date.getDate();
+    var eventsForDay = calendarEvent[month][day];
+    var contents = eventsForDay.map((event,index)=>(
+      React.createElement(PopupCalendarEvent,{event,index,day,month},)
+    ));
+    setpopUpContents(contents);
+    date = DateTime.fromJSDate(date);
+    var title = date.toLocaleString(DateTime.DATE_HUGE);
+    setModalTitle(title);
+    $("#exampleModal").modal("toggle");
+  }
+
+  function PopupCalendarEvent(params)
+  {
+    var event = params.event;
+    var index = params.index;
+    var day = params.day;
+    var month = params.month;
+    var summary = event["summary"];
+    var start = event["start"];
+    var end = event["end"];
+    start = DateTime.fromISO(start);
+    end = DateTime.fromISO(end);
+    start = start.toLocaleString(DateTime.DATETIME_FULL);
+    end = end.toLocaleString(DateTime.DATETIME_FULL);
+    return (
+      <div>
+        <div className="row">
+          <div className="col-10 container border rounded pt-1 px-4 mb-3">
+            <div className="row">
+              Summary: {summary}
+            </div>
+            <div className="row">
+              Start Date: {start}
+            </div>
+            <div className="row">
+              End Date: {end}
+            </div>
+          </div>
+          <div className="col-2">
+            <button className="btn btn-secondary" type="button" onClick={()=>editEvent(event,index,day,month)}>
+                <span className="oi oi-pencil" title="pencil" aria-hidden="true"></span>
+            </button>
+          </div>
+          
+        </div>
+      </div>
+      
+    );
+  }
+
+  function editEvent(event,index,day,month)
+  {
+    setModalTitle("Edit Event");
+    var edit = React.createElement(EditCalendarEvent,{
+      "event":event,"email":email,
+      "index":index,"day":day,
+      "month":month,    
+    },);
+    setpopUpContents(edit);
+  }
+  
+  function calendarUpdated()
+  {
+    React.useEffect(()=>
+    {
+      if(calendarEvent == "")
+          return;
+      Socket.on("calendarUpdated",(data)=>{
+        var start = data["start"];
+        var end = data["end"];
+        var summary = data["summary"];
+        var index = data["index"];
+        var eventId = data["eventId"];
+        var month = data["month"];
+        var day = data["day"];
+        start = DateTime.fromISO(start);
+        
+        let tempCalEvent = JSON.parse(JSON.stringify(calendarEvent));
+        tempCalEvent[month][day].splice(index,1);
+        var event = {
+          "start":data["start"],
+          "end":end,
+          "summary":summary,
+          "id":eventId,
+        }
+        tempCalEvent[start.month-1][start.day].push(event);
+        setCalendarEvent(tempCalEvent);
+      });
+    },[calendarEvent])
+  }
 
   askForInitialCalendarInfo()
   receiveCalendar();
   updateCalendarMonth();
   updateAllLoadedMonths();
+  calendarUpdated();
   return (
   <div className="container-fluid">
     <Calendar
       className="col"
-      onChange={onChange}
+      onChange={onClick}
       value={value}
       tileContent={selectEventsForTile}
       minDetail="month"
       onActiveStartDateChange={changeMonth}
     />
+      <div className="modal fade" id="exampleModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="exampleModalLabel">{modalTitle}</h5>
+              <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="container">
+                {popUpContents}
+              </div>
+            </div>
+            <div className="modal-footer">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
   </div>
   );
 }

@@ -58,61 +58,62 @@ export default function MainPage(params) {
   removePhoneForm();
   return (
     <div className="m-3">
-        <div className="container-fluid ">
-          <div className="row p-3">
-            <img 
-              src="../static/agenda_sync_logo.png" 
-              className="agendaSyncLogo"
-              alt="Responsive image"> 
-            </img>
-            <div className="col col-md col-xl pt-2">
-              <p className="d-none d-md-block text-right">Welcome, {name}</p>
-            </div>
-            
-            <div className="col-4 col-sm-2">
-              <button 
-                type="button" 
-                className="btn dropdown-toggle" 
-                data-toggle="dropdown" 
-                aria-haspopup="true" 
-                aria-expanded="false"
-                >
-                  <img className="profilePic" src={profilePic} alt="profilePic"></img>
-              </button>
-              <div className="dropdown-menu dropdown-menu-right">
-                <a className="dropdown-item px-0" href="#">
-                  <GoogleButton 
-                    setAuthenticated={setAuthenticated}
-                    setName={setName}
-                    setEmail={setEmail}
-                    authenticated={authenticated}
-                  />
-                </a>
-              </div>
-            </div>
-            
-          </div>       
-          <div className="d-block d-md-none">
-            <p >Welcome, {name}</p>
+      <div className="container-fluid ">
+        <div className="row p-3">
+          <img 
+            src="../static/agenda_sync_logo.png" 
+            className="agendaSyncLogo"
+            alt="Responsive image"> 
+          </img>
+          
+          <div className="col col-md col-xl pt-2 d-flex align-items-end justify-content-end">
+            <p className="d-none d-md-block mb-0">Welcome, {name}</p>
           </div>
-        </div>     
-      {selected}
-        <div className="container mt-3">
-          <div className="row justify-content-center">
-            <AddButton
-              setSelected={setSelected}
-              email={email}
-            />
-            <CalendarButton
-              setSelected={setSelected}
-              email={email}
-            />
-            <AgendaButton
-              setSelected={setSelected}
-              email={email}
-            />
+          
+          <div className="col-4 col-sm-2">
+            <button 
+              type="button" 
+              className="btn" 
+              data-toggle="dropdown" 
+              aria-haspopup="true" 
+              aria-expanded="false"
+              >
+                <img className="profilePic" src={profilePic} alt="profilePic"></img>
+            </button>
+            <div className="dropdown-menu dropdown-menu-right">
+              <a className="dropdown-item px-0" href="#">
+                <GoogleButton 
+                  setAuthenticated={setAuthenticated}
+                  setName={setName}
+                  setEmail={setEmail}
+                  authenticated={authenticated}
+                />
+              </a>
+            </div>
           </div>
+          
+        </div>       
+        <div className="d-block d-md-none">
+          <p >Welcome, {name}</p>
         </div>
+      </div>     
+      {selected}
+      <div className="container mt-3">
+        <div className="row justify-content-center">
+          <AddButton
+            setSelected={setSelected}
+            email={email}
+          />
+          <CalendarButton
+            setSelected={setSelected}
+            email={email}
+          />
+          <AgendaButton
+            setSelected={setSelected}
+            email={email}
+          />
+        </div>
+      </div>
     </div>
 
   );

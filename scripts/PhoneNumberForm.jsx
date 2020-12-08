@@ -21,18 +21,24 @@ export default function PhoneNumberForm(params) {
   }
 
   return (
-    <form>
-      Enter country code followed by 10 digit phone number
-      <input
-        type="text"
-        id="phoneNumber"
-        name="phoneNumber"
-        onInput={newInp}
-      />
-      <button type="submit" onClick={sendPhoneNumber}>
-        Submit
-      </button>
+    <form className="container">
+      <div className="row">
+        <p className="col-12 col-lg-5 px-0">Enter country code followed by 10 digit phone number</p>
+        <input
+          type="text"
+          id="phoneNumber"
+          name="phoneNumber"
+          onInput={newInp}
+          className="col-12 col-md-5 col-lg-2"
+          maxLength="11"
+        />
+        <button className="btn btn-secondary ml-2" type="submit" onClick={sendPhoneNumber}>
+          Submit
+        </button>
+      </div>
     </form>
+      
+      
 
   );
 }
