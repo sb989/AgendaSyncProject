@@ -7,6 +7,8 @@ import datetime
 from dateutil import parser
 from dateutil import tz
 import datetime
+import schedule 
+import time 
 
 # from datetime import *
 
@@ -23,7 +25,7 @@ import google_auth_oauthlib.flow
 
 from dotenv import load_dotenv
 from twilio.twiml.messaging_response import MessagingResponse
-
+from twilio.rest import Client
 from google.auth.transport.requests import Request
 from apiclient.discovery import build
 import calendar_helper_functions as chf
@@ -43,8 +45,10 @@ load_dotenv(DOTENV_PATH)
 
 TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
 TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-GOOGLE_URI = os.environ["GOOGLE_URI"]
+GOOGLE_URI_HTTP = os.environ["GOOGLE_URI_HTTP"]
+GOOGLE_URI_HTTPS = os.environ["GOOGLE_URI_HTTPS"]
 
 DATABASE_URI = os.environ["DATABASE_URL"]
 APP.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
@@ -397,15 +401,26 @@ def check_todo(user_email):
 def check_reminders(user_email):
     person = get_person_object(user_email)
     all_todos = DB.session.query(models.Todo).filter_by(person_id=person.id).all()
+    print("person numbers")
+    print(person.phone)
+    message = client.messages.create(
+            to=person.phone, 
+            from_="+16506676737",
+            body="Hello from Python!")
+    print("message sent")
+    print(message.sid)
+    
     current_date = datetime.now()
     current_date_est = current_date - timedelta(hours=5)
     for todo in all_todos:
         reminder_time = todo.due_date - timedelta(minutes=10)
-        if current_date_est == reminder_time:
-            print("the todo")
-            print(todo)
-            return todo
-
+        if current_date_est == current_date_est:
+            message = client.messages.create(
+            to=person.phone, 
+            from_="+16506676737",
+            body="Hello from Python!")
+            print(message.sid)
+            
 def get_cred_from_email(email):
     '''returns cred based on email'''
     person = get_person_object(email)
@@ -416,14 +431,18 @@ def get_cred_from_email(email):
 def login(data):
     ''' On client login, authorize/store google auth token then emit google calendar information '''
     auth_code = data["code"]
-    auth_code = data["code"]
+    http_site = data["http"]
+    print(http_site)
+    print(GOOGLE_URI_HTTP)
+    GOOGLE_URI = GOOGLE_URI_HTTPS
+    if http_site:
+        GOOGLE_URI = GOOGLE_URI_HTTP
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         "client_secret.json",
         scopes=[
             "openid",
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
-            "https://www.googleapis.com/auth/calendar.events",
             "https://www.googleapis.com/auth/calendar",
         ],
         redirect_uri=GOOGLE_URI,
@@ -441,29 +460,17 @@ def login(data):
     profile = requests.get(profileurl)
     profile = profile.json()
     
-    profile_picture = profile['picture']
     user_email = profile["email"]
 
-    login_user = "https://calendar.google.com/calendar/embed?src={}&ctz=America%2FNew_York".format(
-        user_email
-    )
-    
-    flask_socketio.emit("googleCalendar", {"url": login_user, "email": user_email})
-    flask_socketio.emit("profilePicture", {"picture": profile_picture})
-    
-    calendar_id = result["items"][0]["id"]
-
-    # result = service.events().list(calendarId=calendar_id).execute()
-    # for i in result["items"]:
-    #     if i['summary'] == 'DANCE!' and i['dateTime'] == '2020-11-29T13:06:19-05:00':
-    #         events = service.events().get(calendarId=calendar_id, eventId=i['id']).execute()
-    #         print(events)
-    #         print("\n")
-    
-    # get_all_todos()
-    # print(result['items'])
-    
+            
     flask_socketio.emit("email", {"email": user_email})
+
+    if user_email not in get_all_emails():
+        add_new_person_to_db(user_email, cred)
+        flask_socketio.emit("getPhoneNumber")
+    else:
+        print(f"user {user_email} exists")
+        update_tokens_in_db(user_email, cred)
 
 
     if user_email not in get_all_emails():
@@ -540,13 +547,10 @@ def send_new_calendar_info(data):
 @SOCKET_IO.on("receivePhoneNumber")
 def recieve_phone_number(data):
     ''' On client login, retrieve phone number and store it in local database for person '''
-    print(data)
     email = data["email"]
-    print(email)
     person = get_person_object(data["email"])
     phone = "+"
     phone += data["phone"]
-    print(phone)
     person.phone = phone
     DB.session.commit()
     flask_socketio.emit("Server has phone number")
