@@ -46,7 +46,7 @@ export default function AddToDoList(params) {
     <form>
       <div className="container-fluid">
         <div className="row mb-2">
-          <div className="input-group-prepend col-2 col-sm-3 col-md-3 col-lg-1 mr-xl-5 mb-2 mb-md-0 mb-lg-0">
+          <div className="input-group-prepend col-2 col-sm-3 col-md-3 col-lg-3 mr-md-3 mr-xl-5 mb-2 mb-md-0 mb-lg-0">
             <span className="input-group-text" id="basic-addon1">Description</span>
           </div>
           <textarea
@@ -54,7 +54,7 @@ export default function AddToDoList(params) {
           id="todoitem"
           name="todoitem"
           onInput={newInp}
-          className="form-control col-10 col-sm-9 ml-3 ml-md-0 ml-lg-0"
+          className="form-control col-10 col-sm-9 col-md-8 ml-3 ml-md-0 ml-lg-0"
           maxlength="255"
           />
         </div>
