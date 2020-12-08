@@ -6,7 +6,14 @@ import calendar
 import datetime
 from dateutil import parser
 from dateutil import tz
+<<<<<<< HEAD
 import time
+=======
+import datetime
+import schedule 
+import time 
+
+>>>>>>> textbotReminders
 # from datetime import *
 
 import flask
@@ -22,7 +29,7 @@ import google_auth_oauthlib.flow
 
 from dotenv import load_dotenv
 from twilio.twiml.messaging_response import MessagingResponse
-
+from twilio.rest import Client
 from google.auth.transport.requests import Request
 from apiclient.discovery import build
 import calendar_helper_functions as chf
@@ -42,6 +49,7 @@ load_dotenv(DOTENV_PATH)
 
 TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
 TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 GOOGLE_URI_HTTP = os.environ["GOOGLE_URI_HTTP"]
 GOOGLE_URI_HTTPS = os.environ["GOOGLE_URI_HTTPS"]
@@ -479,7 +487,30 @@ def check_todo(user_email):
             delete_todo(todo.id, user_email)
     DB.session.commit();
     print("checked for outdated todos")
-
+    
+def check_reminders(user_email):
+    person = get_person_object(user_email)
+    all_todos = DB.session.query(models.Todo).filter_by(person_id=person.id).all()
+    print("person numbers")
+    print(person.phone)
+    message = client.messages.create(
+            to=person.phone, 
+            from_="+16506676737",
+            body="Hello from Python!")
+    print("message sent")
+    print(message.sid)
+    
+    current_date = datetime.now()
+    current_date_est = current_date - timedelta(hours=5)
+    for todo in all_todos:
+        reminder_time = todo.due_date - timedelta(minutes=10)
+        if current_date_est == current_date_est:
+            message = client.messages.create(
+            to=person.phone, 
+            from_="+16506676737",
+            body="Hello from Python!")
+            print(message.sid)
+            
 def get_cred_from_email(email):
     '''returns cred based on email'''
     person = get_person_object(email)
@@ -600,13 +631,10 @@ def send_new_calendar_info(data):
 @SOCKET_IO.on("receivePhoneNumber")
 def recieve_phone_number(data):
     ''' On client login, retrieve phone number and store it in local database for person '''
-    print(data)
     email = data["email"]
-    print(email)
     person = get_person_object(data["email"])
     phone = "+"
     phone += data["phone"]
-    print(phone)
     person.phone = phone
     DB.session.commit()
     flask_socketio.emit("Server has phone number")
