@@ -57,7 +57,6 @@ def init_db(APP):
     ''' initialize the database '''
     DB.init_app(APP)
     DB.APP = APP
-    # models.createModels()
     DB.session.commit()
     
 def update_calendar_event(incoming_msg, email, message):
@@ -642,7 +641,6 @@ def add_todo_list(data):
     print(start_todo)
     print(end_todo)
     add_new_todo_to_db(desc, user_email, start_todo, end_todo)
-    # get_all_todos()
 
 @SOCKET_IO.on("sendProfile")
 def send_profile(data):
