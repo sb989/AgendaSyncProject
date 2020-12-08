@@ -31,15 +31,16 @@ def create_update_month_message(cred, curr_month_date, prev_month_date, padding)
         sorted_events = create_sorted_events_for_new_month(curr_month_date, -padding, cred)
         new_month = curr_month_date.month
         new_month = new_month - padding
-        if new_month < 0:
+        if new_month < 1:
             new_month = new_month + 12
     elif curr_month_date > prev_month_date:
         delete_month = prev_month - padding
-        if delete_month < 0:
+        if delete_month < 1:
             delete_month = 12 + delete_month
         sorted_events = create_sorted_events_for_new_month(curr_month_date, padding, cred)
         new_month = curr_month_date.month
         #print(new_month)
+        print(prev_month,padding,delete_month)
         new_month = new_month + padding
         #print(new_month)
         if new_month > 12:

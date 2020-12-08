@@ -29,7 +29,7 @@ export default function UserCalendar(params) {
     var eventsForDay = calendarEvent[month][day];
     var event;
     var events = [];
-    console.log(eventsForDay);
+    // console.log(eventsForDay);
     if(eventsForDay.length == 0 )
       return events;
     for (event of eventsForDay)
@@ -60,13 +60,16 @@ export default function UserCalendar(params) {
         var month = parseInt(data["addMonth"],10);
         var events = data["addEvents"][month];
         var deleteMonth = data["deleteMonth"];
-        if(calendarEvent[month] != undefined)
-        {
-          // console.log("dont update!");
-          return;
-        }
-          
+        // if(calendarEvent[month] != undefined)
+        // {
+        //   // console.log("dont update!");
+        //   return;
+        // }
+        
         console.log("add");
+        console.log(month);
+        console.log('delete');
+        console.log(deleteMonth);
         console.log(calendarEvent);
         let tempCalEvent = JSON.parse(JSON.stringify(calendarEvent));
         tempCalEvent[month] = events;
@@ -153,7 +156,6 @@ export default function UserCalendar(params) {
     var month = date.getMonth();
     var day = date.getDate();
     var eventsForDay = calendarEvent[month][day];
-    console.log(eventsForDay);
     var contents = eventsForDay.map((event,index)=>(
       React.createElement(PopupCalendarEvent,{event,index,day,month},)
     ));
@@ -221,7 +223,6 @@ export default function UserCalendar(params) {
       if(calendarEvent == "")
           return;
       Socket.on("calendarUpdated",(data)=>{
-        console.log('update');
         var start = data["start"];
         var end = data["end"];
         var summary = data["summary"];
@@ -232,7 +233,6 @@ export default function UserCalendar(params) {
         start = DateTime.fromISO(start);
         
         let tempCalEvent = JSON.parse(JSON.stringify(calendarEvent));
-        console.log(tempCalEvent);
         tempCalEvent[month][day].splice(index,1);
         var event = {
           "start":data["start"],
@@ -240,11 +240,7 @@ export default function UserCalendar(params) {
           "summary":summary,
           "id":eventId,
         }
-        console.log(event);
-        console.log(month);
-        console.log(day);
         tempCalEvent[start.month-1][start.day].push(event);
-        console.log(tempCalEvent);
         setCalendarEvent(tempCalEvent);
       });
     },[calendarEvent])
