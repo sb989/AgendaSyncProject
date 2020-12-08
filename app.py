@@ -274,21 +274,21 @@ def bot():
         
     if UPDATE_CALENDAR in incoming_msg:    
         message_body = incoming_msg_orig[16:]
-        if(update_calendar(incoming_msg, user_email, message_body) == 'completed event'):
+        if(update_calendar_event(incoming_msg, user_email, message_body) == 'completed event'):
             msg_array = message_body.split(" ", 1)
             msg_array[1] = msg_array[1].split(":")
             
             msg.body("Replaced event title '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
             responded = True
         
-        elif(update_calendar(incoming_msg, user_email, message_body) == 'completed start date'):
+        elif(update_calendar_event(incoming_msg, user_email, message_body) == 'completed start date'):
             msg_array = message_body.split(" ", 1)
             msg_array[1] = msg_array[1].split(":", 1)
             
             msg.body("Replaced start date of '" + msg_array[1][0] + "' with '" + msg_array[1][1] + "' in your calendar!")
             responded = True
             
-        elif(update_calendar(incoming_msg, user_email, message_body) == 'completed end date'):
+        elif(update_calendar_event(incoming_msg, user_email, message_body) == 'completed end date'):
             msg_array = message_body.split(" ", 1)
             msg_array[1] = msg_array[1].split(":", 1)
             
