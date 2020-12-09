@@ -12,20 +12,21 @@ import flask
 import requests
 import flask_socketio
 import flask_sqlalchemy
-from flask import request
-
 import google_auth_oauthlib.flow
 
+from flask import request
 from dotenv import load_dotenv
 from twilio.twiml.messaging_response import MessagingResponse
-
+from twilio.rest import Client
 from google.auth.transport.requests import Request
 from apiclient.discovery import build
+from flask_apscheduler import APScheduler
 import calendar_helper_functions as chf
 
 USERS_UPDATED_CHANNEL = "users updated"
 
 APP = flask.Flask(__name__)
+scheduler = APScheduler()
 
 SOCKET_IO = flask_socketio.SocketIO(APP)
 SOCKET_IO.init_app(APP, cors_allowed_origins="*")
@@ -39,6 +40,7 @@ load_dotenv(DOTENV_PATH)
 
 TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
 TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 GOOGLE_URI_HTTP = os.environ["GOOGLE_URI_HTTP"]
 GOOGLE_URI_HTTPS = os.environ["GOOGLE_URI_HTTPS"]
@@ -50,11 +52,13 @@ DB = flask_sqlalchemy.SQLAlchemy(APP)
 
 import models
 
+
 def init_db(APP):
     ''' initialize the database '''
     DB.init_app(APP)
     DB.APP = APP
     DB.session.commit()
+
 
 def update_calendar_event(incoming_msg, email, message):
     ''' Update google calendar event given an event summary or date tag '''
@@ -165,8 +169,6 @@ def hello():
     ''' Initialize frontend template index.html '''
     return flask.render_template("index.html")
 
-# twilio
-# ngrok http 8080
 
 ADD_TODO = "add todo"
 ADD_TODO_ENDLESS = "add todo endless"
@@ -179,6 +181,16 @@ DUE_DATE = "due date"
 HELP_ME = "help me"
 ADD_CALENDAR = "add calendar"
 UPDATE_CALENDAR = "update calendar"
+HELP_ME_MESSAGE = (
+    "Hello! I'm the AgendaSync textbot! "
+    + "My know commands are: 'add todo [name of todo]'"
+    + ", 'add todo endless [name of todo]', 'mark complete [id]'"
+    + ", 'delete todo [id]', 'list todo', 'update todo [id]'"
+    + ", 'start date [id]', 'due date [id]'"
+    + ", 'add calendar [name]', 'update calendar event [name:newname]'"
+    + ", 'update calendar starttime [name]:[MM/DD/YYY H:m[am/pm]]'"
+    + ", 'update calendar endtime [name]:[MM/DD/YYY H:m[am/pm]]'"
+)
 
 start_date = datetime.now()
 start_date_est = start_date - timedelta(hours=5)
@@ -210,16 +222,8 @@ def bot():
     responded = False
 
     if HELP_ME in incoming_msg:
-        msg.body(
-            "Hello! I'm the agendasync textbot!"
-            + "My know commands are: 'add todo'"
-            + ", add todo endless, mark complete"
-            + ", 'delete todo, 'list todo' "
-            + ",'start date', and 'due date',"
-            + "'add calendar', and 'update calendar [event/date]'"
-        )
+        msg.body(HELP_ME_MESSAGE)
         responded = True
-
     if ADD_TODO_ENDLESS in incoming_msg:
         message_body = incoming_msg[17:]
         if check_empty_argument(msg, ADD_TODO_ENDLESS, message_body):
@@ -277,7 +281,6 @@ def bot():
             msg.body("Please reply with a todo id to update: 'update todo id'\n")
             msg.body(get_all_todos_values(user_email))
             responded = True
-
     if LIST_TODO in incoming_msg:
         msg.body(
             "Your todo list contents are as follows: "
@@ -386,6 +389,7 @@ def get_all_emails():
     ]
     return all_emails
 
+
 def get_all_todos_values(user_email):
     ''' Query todolist values from a specific person's table, filter by person ID '''
     person = get_person_object(user_email)
@@ -405,10 +409,12 @@ def get_all_todos_values(user_email):
         )
     return " ".join(map(str, todo_list))
 
+
 def get_person_object_phone_number(phone):
     ''' Query phone number from specific person's table, filter by phone number '''
     some_person = DB.session.query(models.Person).filter_by(phone=phone).first()
     return some_person
+
 
 def get_person_object(email):
     ''' Query person ID from specific person's table, filter by email '''
@@ -416,11 +422,13 @@ def get_person_object(email):
     print(type(some_person))
     return some_person
 
+
 def add_new_person_to_db(email, cred, phone=""):
     ''' Create new person table, identify them by email, login credentials, and phone number '''
     person = models.Person(email=email, cred=cred, phone=phone)
     DB.session.add(person)
     DB.session.commit()
+
 
 def update_tokens_in_db(email, cred):
     ''' Update person's table with new credentials token, query by email '''
@@ -428,17 +436,13 @@ def update_tokens_in_db(email, cred):
     person.cred = cred
     DB.session.commit()
 
+
 @SOCKET_IO.on("send todo")
 def get_all_todos(data):
     ''' Query todos by person id, emit all found (todos, sds, dds) to client in list format '''
-    # person = get_person_object(user_email)
-    # all_todos = DB.session.query(models.Todo).filter_by(person_id=person.id).all()
-    # # all_todos = [db_todos.todo for db_todos in DB.session.query(models.Person).all()]
-    # return person.todos
     user_email = data["email"]
     person = get_person_object(user_email)
     todos = []
-
     all_todos = DB.session.query(models.Todo).filter_by(person_id=person.id).all()
     for todo in all_todos:
         todos.append(
@@ -449,13 +453,9 @@ def get_all_todos(data):
                 "id": todo.id,
             }
         )
-        # todos.append(todo.todo)
-        # start_todos.append(str(todo.start_todo))
-        # due_dates.append(str(todo.due_date))
-
     message = {"todos": todos}
     flask_socketio.emit("sending todo info", message)
-    print(message)
+
 
 def add_new_todo_to_db(todo, user_email, start="", end=""):
     ''' Query person's database, add (start/end date optional) new todos to database from client '''
@@ -469,6 +469,7 @@ def add_new_todo_to_db(todo, user_email, start="", end=""):
     DB.session.add(todo_entry)
     DB.session.commit()
 
+
 def add_new_todo_to_db_endless(todo, user_email, start, end):
     ''' Query person's database, add (start/end date optional) new todos to database from client '''
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
@@ -478,6 +479,7 @@ def add_new_todo_to_db_endless(todo, user_email, start, end):
     DB.session.add(todo_entry)
     DB.session.commit()
 
+
 def update_todo(ident, user_email, start, end):
     ''' Query person's database, update todos in database from client '''
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
@@ -485,6 +487,7 @@ def update_todo(ident, user_email, start, end):
     todo.start_todo = start
     todo.due_date = end
     DB.session.commit()
+
 
 def delete_todo(ident, user_email):
     ''' Query person's database, delete todos in database from client '''
@@ -495,6 +498,7 @@ def delete_todo(ident, user_email):
     # DB.session.delete(todo_entry);
     DB.session.commit()
 
+
 def start_date_todo(ident, user_email):
     ''' Query person's database, return start date of todolist item '''
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
@@ -503,6 +507,7 @@ def start_date_todo(ident, user_email):
     DB.session.commit()
     return start
 
+
 def due_date_todo(ident, user_email):
     ''' Query person's database, return start date of todolist item '''
     some_person = DB.session.query(models.Person).filter_by(email=user_email).first()
@@ -510,6 +515,7 @@ def due_date_todo(ident, user_email):
     end = todo.due_date
     DB.session.commit()
     return end
+
 
 def check_todo(user_email):
     ''' Query person's database, clear todolist items that are considered past due '''
@@ -521,7 +527,27 @@ def check_todo(user_email):
         if todo.due_date < current_date_est:
             delete_todo(todo.id, user_email)
     DB.session.commit()
-    print("checked for outdated todos")
+
+
+def check_reminders(user_email):
+    ''' Check reminders after querying database and send it to client '''
+    person = get_person_object(user_email)
+    all_todos = DB.session.query(models.Todo).filter_by(person_id=person.id).all()
+    current_date = datetime.now()
+    current_est = current_date - timedelta(hours=5)
+    for todo in all_todos:
+        reminder_time = todo.due_date - timedelta(hours=5, minutes=10)
+        print(current_est)
+        print(reminder_time)
+        print(reminder_time < current_est)
+        if reminder_time < current_est:
+            message = client.messages.create(
+                to=person.phone,
+                from_="+16506676737",
+                body="REMINDER: TODO "
+                + str(todo.todo)
+                + " is due soon! Please update todo or it will be deleted",
+            )
 
 
 def get_cred_from_email(email):
@@ -549,11 +575,8 @@ def login(data):
         ],
         redirect_uri=GOOGLE_URI,
     )
-
     flow.fetch_token(code=auth_code)
-
     cred = flow.credentials
-
     profileurl = (
         "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token={}".format(
             cred.token
@@ -561,11 +584,16 @@ def login(data):
     )
     profile = requests.get(profileurl)
     profile = profile.json()
-
     user_email = profile["email"]
-
+    scheduler.add_job(
+        id="check reminder",
+        func=check_reminders,
+        kwargs={"user_email": user_email},
+        trigger="interval",
+        minutes=5,
+    )
+    scheduler.start()
     flask_socketio.emit("email", {"email": user_email})
-
     if user_email not in get_all_emails():
         add_new_person_to_db(user_email, cred)
         flask_socketio.emit("getPhoneNumber")
@@ -647,13 +675,9 @@ def send_new_calendar_info(data):
 @SOCKET_IO.on("receivePhoneNumber")
 def recieve_phone_number(data):
     ''' On client login, retrieve phone number and store it in local database for person '''
-    print(data)
-    email = data["email"]
-    print(email)
     person = get_person_object(data["email"])
     phone = "+"
     phone += data["phone"]
-    print(phone)
     person.phone = phone
     DB.session.commit()
     flask_socketio.emit("Server has phone number")
@@ -745,13 +769,10 @@ def add_todo_list(data):
     endless = data["endless"]
     start_todo = parser.isoparse(start_todo)
     end_todo = parser.isoparse(end_todo)
-    # print(start_todo)
-    # print(end_todo)
     if endless:
         add_new_todo_to_db_endless(desc, user_email, start_todo, datetime.max)
     else:
         add_new_todo_to_db(desc, user_email, start_todo, end_todo)
-    # get_all_todos()
 
 
 @SOCKET_IO.on("sendProfile")
