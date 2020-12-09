@@ -254,15 +254,15 @@ export default function UserCalendar(params) {
   updateAllLoadedMonths();
   calendarUpdated();
   return (
-    <div className="container-fluid">
-      <Calendar
-        className="col"
-        onChange={onClick}
-        value={value}
-        tileContent={selectEventsForTile}
-        minDetail="month"
-        onActiveStartDateChange={changeMonth}
-      />
+  <div className="container-fluid">
+    <Calendar
+      className="col px-0"
+      onChange={onClick}
+      value={value}
+      tileContent={selectEventsForTile}
+      minDetail="month"
+      onActiveStartDateChange={changeMonth}
+    />
       <div className="modal fade" id="exampleModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div className="modal-dialog">
           <div className="modal-content">
