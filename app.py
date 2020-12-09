@@ -22,7 +22,6 @@ from google.auth.transport.requests import Request
 from apiclient.discovery import build
 from flask_apscheduler import APScheduler
 
-import models
 import calendar_helper_functions as chf
 
 USERS_UPDATED_CHANNEL = "users updated"
@@ -51,6 +50,8 @@ DATABASE_URI = os.environ["DATABASE_URL"]
 APP.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 
 DB = flask_sqlalchemy.SQLAlchemy(APP)
+
+import models
 
 
 def init_db(app):
