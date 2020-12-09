@@ -254,7 +254,7 @@ export default function UserCalendar(params) {
   return (
   <div className="container-fluid">
     <Calendar
-      className="col"
+      className="col px-0"
       onChange={onClick}
       value={value}
       tileContent={selectEventsForTile}
