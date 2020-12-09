@@ -76,7 +76,7 @@ export default function ToDoList(params) {
   }
 
   function todoFormat(message, todo) {
-    let { dueDate } = todo;
+    let  dueDate  = todo["due_date"];
     dueDate = DateTime.fromISO(dueDate);
     let className = '';
     if (dueDate.equals(maxDate)) {

@@ -27,7 +27,6 @@ import calendar_helper_functions as chf
 USERS_UPDATED_CHANNEL = "users updated"
 
 APP = flask.Flask(__name__)
-SCHEDULAR = APScheduler()
 
 SOCKET_IO = flask_socketio.SocketIO(APP)
 SOCKET_IO.init_app(APP, cors_allowed_origins="*")
@@ -586,14 +585,7 @@ def login(data):
     profile = requests.get(profileurl)
     profile = profile.json()
     user_email = profile["email"]
-    SCHEDULAR.add_job(
-        id="check reminder",
-        func=check_reminders,
-        kwargs={"user_email": user_email},
-        trigger="interval",
-        minutes=5,
-    )
-    SCHEDULAR.start()
+    
     flask_socketio.emit("email", {"email": user_email})
     if user_email not in get_all_emails():
         add_new_person_to_db(user_email, cred)
