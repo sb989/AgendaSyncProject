@@ -5,16 +5,15 @@ import ReactDOM from 'react-dom';
 import Socket from './Socket';
 
 export default function GoogleButton(params) {
-  //const clientId = "25700182333-kan1soef90krqdbho3mogdbr35k4fpd6.apps.googleusercontent.com";
-  const clientId = "30624731772-clsbuhec4ag6bukbqpsuf1qppc3g3n5r.apps.googleusercontent.com";
+  // const clientId = "25700182333-kan1soef90krqdbho3mogdbr35k4fpd6.apps.googleusercontent.com";
+  const clientId = '30624731772-clsbuhec4ag6bukbqpsuf1qppc3g3n5r.apps.googleusercontent.com';
   // console.log(clientId);
   function success(response) {
     const { code } = response;
-    var http = false;
-    if (window.location.protocol == 'http:') { 
-      
-      http = true; 
-    }  
+    let http = false;
+    if (window.location.protocol === 'http:') {
+      http = true;
+    }
     if (code !== undefined) {
       Socket.emit('login with code', {
         code,
@@ -23,7 +22,6 @@ export default function GoogleButton(params) {
     } else {
       const { email } = response.profileObj;
       params.setEmail(email);
-     
     }
     params.setAuthenticated(true);
     params.setCode(code);
@@ -44,15 +42,12 @@ export default function GoogleButton(params) {
       email,
       profilePic,
     });
-    
+
     let mounted = true;
-    if(mounted)
-    {
+    if (mounted) {
       params.setAuthenticated(false);
     }
     return () => mounted = false;
-    
-    
   }
 
   if (!params.authenticated) {
@@ -75,18 +70,17 @@ export default function GoogleButton(params) {
 
   return (
     <GoogleLogout
-    className="googleLogoutButton"
-    isSignedIn={false}
-    clientId={clientId}
-    buttonText="Logout"
-    render={renderProps => (
-      <button className="btn btn-ligh col" onClick={renderProps.onClick} disabled={renderProps.disabled}>Logout</button>
-    )}
-    onLogoutSuccess={logout}
-    onFailure={failure}
+      className="googleLogoutButton"
+      isSignedIn={false}
+      clientId={clientId}
+      buttonText="Logout"
+      render={(renderProps) => (
+        <button className="btn btn-ligh col" onClick={renderProps.onClick} disabled={renderProps.disabled} type="button">Logout</button>
+      )}
+      onLogoutSuccess={logout}
+      onFailure={failure}
 
     />
 
-    
   );
 }

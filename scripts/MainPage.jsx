@@ -20,16 +20,16 @@ export default function MainPage(params) {
 
   function setUpDefaultLook() {
     React.useEffect(() => {
-      setSelected(React.createElement(UserCalendar, { "email":email }));
-    },[]);
+      setSelected(React.createElement(UserCalendar, { email }));
+    }, []);
   }
 
-  function askForProfilePic(){
-    React.useEffect(()=>{
-      Socket.emit("sendProfile",{
-        email
+  function askForProfilePic() {
+    React.useEffect(() => {
+      Socket.emit('sendProfile', {
+        email,
       });
-    },[]);
+    }, []);
   }
 
   function getPhoneNumber() {
@@ -48,7 +48,7 @@ export default function MainPage(params) {
   function removePhoneForm() {
     React.useEffect(() => {
       Socket.on('Server has phone number', () => {
-        setSelected(React.createElement(UserCalendar, {  "email":email }));
+        setSelected(React.createElement(UserCalendar, { email }));
       });
     });
   }
@@ -60,29 +60,29 @@ export default function MainPage(params) {
     <div className="m-3">
       {/* <div className="container-fluid ">
         <div className="row p-3">
-          <img 
-            src="../static/agenda_sync_logo.png" 
+          <img
+            src="../static/agenda_sync_logo.png"
             className="agendaSyncLogo"
-            alt="Responsive image"> 
+            alt="Responsive image">
           </img>
-          
+
           <div className="col col-md col-xl pt-2 d-flex align-items-end justify-content-end">
             <p className="d-none d-md-block mb-0">Welcome, {name}</p>
           </div>
-          
+
           <div className="col-4 col-sm-2">
-            <button 
-              type="button" 
-              className="btn" 
-              data-toggle="dropdown" 
-              aria-haspopup="true" 
+            <button
+              type="button"
+              className="btn"
+              data-toggle="dropdown"
+              aria-haspopup="true"
               aria-expanded="false"
               >
                 <img className="profilePic" src={profilePic} alt="profilePic"></img>
             </button>
             <div className="dropdown-menu dropdown-menu-right">
               <a className="dropdown-item px-0" href="#">
-                <GoogleButton 
+                <GoogleButton
                   setAuthenticated={setAuthenticated}
                   setName={setName}
                   setEmail={setEmail}
@@ -91,10 +91,13 @@ export default function MainPage(params) {
               </a>
             </div>
           </div>
-          
-        </div> */}      
+
+        </div> */}
       <div className="d-block d-md-none">
-          <p >Welcome, {name}</p>
+        <p>
+          Welcome,
+          {name}
+        </p>
       </div>
       {selected}
       <div className="container mt-3">
