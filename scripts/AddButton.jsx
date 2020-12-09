@@ -11,12 +11,14 @@ export default function AddButton(params) {
     );
   }
   return (
-   <div className="col-4 col-xl-2 mr-xl-5">
-    <button type="button" onClick={addForm} 
-    className="btn btn-landingPageOrange btn-fullsize"
-    >
-      <span className="oi oi-plus" title="plus" aria-hidden="true"></span>
-    </button>
+    <div className="col-4 col-xl-2 mr-xl-5">
+      <button
+        type="button"
+        onClick={addForm}
+        className="btn btn-landingPageOrange btn-fullsize"
+      >
+        <span className="oi oi-plus" title="plus" aria-hidden="true" />
+      </button>
     </div>
   );
 }

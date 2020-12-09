@@ -7,38 +7,33 @@ export default function AddForm(params) {
   const todoList = React.createElement(AddToDoList, { email });
   const calendarEvent = React.createElement(AddCalendarEvent, { email });
   const [form, setForm] = React.useState(todoList);
-  const [test,setTest] = React.useState("");
+  const [test, setTest] = React.useState('');
   //   const selectedForm = todoList;
-
 
   function formPicker(e) {
     const val = e.target.value;
     if (val === 'todolist') {
-
       setForm(todoList);
     } else {
       setForm(calendarEvent);
     }
   }
 
-  function setUpDefault()
-  {
-    var todoRadio = document.getElementById("todolist")
-    console.log(todoRadio);
-    if(todoRadio != undefined || todoRadio != null)
-    {
+  function setUpDefault() {
+    const todoRadio = document.getElementById('todolist');
+    // console.log(todoRadio);
+    if (todoRadio !== undefined || todoRadio !== null) {
       todoRadio.checked = true;
     }
-
   }
-  React.useEffect(()=>{
+  React.useEffect(() => {
     setUpDefault();
-  },[])
+  }, []);
   return (
     <div className="container-fluid">
       <h1 className="text-logocolor">Add Event</h1>
-      <div className ="row">
-        <div className="col-0 col-md-3"></div>
+      <div className="row">
+        <div className="col-0 col-md-3" />
         <div className="col col-md-9">
           <form>
             <div className="btn-group btn-group-toggle" data-toggle="buttons">
@@ -54,10 +49,8 @@ export default function AddForm(params) {
           </form>
           {form}
         </div>
-        <div className="col-2"></div>
+        <div className="col-2" />
       </div>
-      
-      
 
     </div>
   );

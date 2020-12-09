@@ -3,7 +3,6 @@ import calendar
 from dateutil import parser
 from apiclient.discovery import build
 
-
 def create_update_all_message(cred, start_month, end_month):
     ''' returns the events seperated by month for the timespan specified'''
     service = build("calendar", "v3", credentials=cred)
@@ -39,10 +38,8 @@ def create_update_month_message(cred, curr_month_date, prev_month_date, padding)
             delete_month = 12 + delete_month
         sorted_events = create_sorted_events_for_new_month(curr_month_date, padding, cred)
         new_month = curr_month_date.month
-        #print(new_month)
-        print(prev_month,padding,delete_month)
+        print(prev_month, padding, delete_month)
         new_month = new_month + padding
-        #print(new_month)
         if new_month > 12:
             new_month = new_month - 12
         #print(new_month)
@@ -128,7 +125,6 @@ def populate_sorted_events(sorted_events, events):
         start = month
         event_id = event["id"]
         summary = event["summary"]
-        html_link = event["htmlLink"]
         month = parser.isoparse(month)
         day = month.day
         month = month.month
@@ -140,3 +136,4 @@ def populate_sorted_events(sorted_events, events):
             "id":event_id
         })
     return sorted_events
+    
