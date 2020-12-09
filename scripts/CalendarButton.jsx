@@ -6,17 +6,18 @@ export default function CalendarButton(params) {
   const { email } = params;
   function calendar(e) {
     e.preventDefault();
-    setSelected(React.createElement(UserCalendar, {email}));
+    setSelected(React.createElement(UserCalendar, { email }));
   }
   return (
     <div className="col-4 col-xl-2 mx-xl-5">
-      <button 
-      type="button" onClick={calendar} 
-      className="btn btn-landingPageBlue btn-fullsize"
+      <button
+        type="button"
+        onClick={calendar}
+        className="btn btn-landingPageBlue btn-fullsize"
       >
-        <span className="oi oi-calendar" title="calendar" aria-hidden="true"></span>
+        <span className="oi oi-calendar" title="calendar" aria-hidden="true" />
       </button>
     </div>
-    
+
   );
 }
