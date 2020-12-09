@@ -192,8 +192,8 @@ HELP_ME_MESSAGE = (
     + ", 'update calendar endtime [name]:[MM/DD/YYY H:m[am/pm]]'"
 )
 
-START_DATE = datetime.now()
-START_DATE_EST = START_DATE - timedelta(hours=5)
+START_DATE_DATE = datetime.now()
+START_DATE_EST = START_DATE_DATE - timedelta(hours=5)
 START_DATE_ISO = START_DATE_EST.isoformat()
 END_DATE_ISO = START_DATE_EST + timedelta(hours=1)
 END_DATE_ISO = END_DATE_ISO.isoformat()
