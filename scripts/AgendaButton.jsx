@@ -10,11 +10,12 @@ export default function AgendaButton(params) {
   }
   return (
     <div className="col-4 col-xl-2 ml-xl-5">
-      <button 
-      type="button" onClick={addForm} 
-      className="btn btn-landingPageYellow btn-fullsize"
+      <button
+        type="button"
+        onClick={addForm}
+        className="btn btn-landingPageYellow btn-fullsize"
       >
-        <span className="oi oi-list" title="list" aria-hidden="true"></span>
+        <span className="oi oi-list" title="list" aria-hidden="true" />
       </button>
     </div>
   );

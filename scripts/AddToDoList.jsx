@@ -12,8 +12,8 @@ export default function AddToDoList(params) {
 
   function sendToDoList(e) {
     e.preventDefault();
-    console.log(input);
-    var endless = disableEndDate;
+    // console.log(input);
+    const endless = disableEndDate;
     Socket.emit('addToDoList', {
       email,
       description: input,
@@ -21,25 +21,23 @@ export default function AddToDoList(params) {
       endDate,
       endless,
     });
-    document.getElementById("todoitem").value="";
+    document.getElementById('todoitem').value = '';
     setStartDate(new Date());
-    setEndDate(new Date());    
+    setEndDate(new Date());
   }
 
   function newInp(curr) {
     setInput(curr.target.value);
   }
 
-  function checkboxToggle(data)
-  {
-    var check = data.target.checked;
-    var endDate = document.getElementById("todoEnd");
+  function checkboxToggle(data) {
+    const check = data.target.checked;
+    const endDate = document.getElementById('todoEnd');
     setDisableEndDate(check);
     // if(check)
     // {
     //   endDate.className = "make-background-grey";
     // }
-
   }
 
   return (
@@ -50,19 +48,19 @@ export default function AddToDoList(params) {
             <span className="input-group-text" id="basic-addon1">ToDo</span>
           </div>
           <textarea
-          type="text"
-          id="todoitem"
-          name="todoitem"
-          onInput={newInp}
-          className="form-control col-10 col-sm-9 col-md-8 ml-3 ml-md-0 ml-lg-0"
-          maxlength="255"
+            type="text"
+            id="todoitem"
+            name="todoitem"
+            onInput={newInp}
+            className="form-control col-10 col-sm-9 col-md-8 ml-3 ml-md-0 ml-lg-0"
+            maxLength="255"
           />
         </div>
         <div className="row mb-2">
           <div className="input-group-prepend col-2 col-sm-3 col-md-3 col-lg-1 mr-xl-5 mb-2 mb-md-0 mb-lg-0">
             <span className="input-group-text" id="basic-addon2">Start Date</span>
           </div>
-          
+
           <DatePicker
             selected={startDate}
             onSelect={(d) => setStartDate(d)} // when day is clicked
@@ -71,12 +69,12 @@ export default function AddToDoList(params) {
             showTimeSelect
             className="btn btn-light col-10 ml-3 ml-md-0 ml-lg-0"
           />
-          
+
         </div>
         <div className="row mb-2">
           <div className="input-group-prepend col-12 mr-xl-5 mb-2 mb-md-0 mb-lg-0">
-              <input type="checkbox" aria-label="endless" onChange={checkboxToggle}/>
-              <small className="ml-2" > No End Date </small>
+            <input type="checkbox" aria-label="endless" onChange={checkboxToggle} />
+            <small className="ml-2"> No End Date </small>
           </div>
         </div>
         <div className="row mb-2">
@@ -92,14 +90,14 @@ export default function AddToDoList(params) {
             disabled={disableEndDate}
             className="btn btn-light col-10 ml-3 ml-md-0 ml-lg-0"
             id="todoEnd"
-          />      
+          />
         </div>
         <div className="row">
           <button className="btn btn-primary ml-3" type="submit" onClick={sendToDoList}>
             Submit
           </button>
         </div>
-        
+
       </div>
     </form>
   );
