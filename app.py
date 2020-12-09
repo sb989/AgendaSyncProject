@@ -1,4 +1,4 @@
-''' app.py '''
+''' APP.py '''
 
 import os
 from os.path import join, dirname
@@ -54,10 +54,10 @@ DB = flask_sqlalchemy.SQLAlchemy(APP)
 import models
 
 
-def init_db(app):
+def init_db(APP):
     ''' initialize the database '''
-    DB.init_app(app)
-    DB.APP = app
+    DB.init_app(APP)
+    DB.APP = APP
     DB.session.commit()
 
 
