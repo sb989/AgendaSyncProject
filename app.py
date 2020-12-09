@@ -21,12 +21,14 @@ from twilio.rest import Client
 from google.auth.transport.requests import Request
 from apiclient.discovery import build
 from flask_apscheduler import APScheduler
+
+import models
 import calendar_helper_functions as chf
 
 USERS_UPDATED_CHANNEL = "users updated"
 
 APP = flask.Flask(__name__)
-scheduler = APScheduler()
+SCHEDULAR = APScheduler()
 
 SOCKET_IO = flask_socketio.SocketIO(APP)
 SOCKET_IO.init_app(APP, cors_allowed_origins="*")
@@ -40,7 +42,7 @@ load_dotenv(DOTENV_PATH)
 
 TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
 TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
-client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+CLIENT = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 GOOGLE_URI_HTTP = os.environ["GOOGLE_URI_HTTP"]
 GOOGLE_URI_HTTPS = os.environ["GOOGLE_URI_HTTPS"]
@@ -50,13 +52,11 @@ APP.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 
 DB = flask_sqlalchemy.SQLAlchemy(APP)
 
-import models
 
-
-def init_db(APP):
+def init_db(app):
     ''' initialize the database '''
-    DB.init_app(APP)
-    DB.APP = APP
+    DB.init_app(app)
+    DB.APP = app
     DB.session.commit()
 
 
@@ -100,12 +100,12 @@ def update_calendar_event(incoming_msg, email, message):
         msg_array[1] = msg_array[1].split(":", 1)
 
         try:
-            firstDate = datetime.strptime(msg_array[1][1], "%m/%d/%Y %I:%M%p")
-            firstDatePad = datetime.strptime(msg_array[1][1], "%m/%d/%Y %I:%M%p")
-            firstDatePad = firstDatePad + timedelta(hours=1)
+            first_date = datetime.strptime(msg_array[1][1], "%m/%d/%Y %I:%M%p")
+            first_date_pad = datetime.strptime(msg_array[1][1], "%m/%d/%Y %I:%M%p")
+            first_date_pad = first_date_pad + timedelta(hours=1)
 
-            adjustment = firstDate.strftime("%Y-%m-%d" + "T" + "%H:%M:%S")
-            adjustmentPad = firstDatePad.strftime("%Y-%m-%d" + "T" + "%H:%M:%S")
+            adjustment = first_date.strftime("%Y-%m-%d" + "T" + "%H:%M:%S")
+            adjustment_pad = first_date_pad.strftime("%Y-%m-%d" + "T" + "%H:%M:%S")
         except:
             return "Please provide proper date format"
 
@@ -121,7 +121,7 @@ def update_calendar_event(incoming_msg, email, message):
                         adjustment + event["start"]["dateTime"][19:]
                     )
                     event["end"]["dateTime"] = (
-                        adjustmentPad + event["start"]["dateTime"][19:]
+                        adjustment_pad + event["start"]["dateTime"][19:]
                     )
                     service.events().update(
                         calendarId=email, eventId=item["id"], body=event
@@ -136,8 +136,8 @@ def update_calendar_event(incoming_msg, email, message):
         msg_array[1] = msg_array[1].split(":", 1)
 
         try:
-            secondDate = datetime.strptime(msg_array[1][1], "%m/%d/%Y %I:%M%p")
-            adjustmentTwo = secondDate.strftime("%Y-%m-%d" + "T" + "%H:%M:%S")
+            second_date = datetime.strptime(msg_array[1][1], "%m/%d/%Y %I:%M%p")
+            adjustment_two = second_date.strftime("%Y-%m-%d" + "T" + "%H:%M:%S")
         except:
             return "Please provide proper date format"
 
@@ -150,7 +150,7 @@ def update_calendar_event(incoming_msg, email, message):
                         .execute()
                     )
                     event["end"]["dateTime"] = (
-                        adjustmentTwo + event["start"]["dateTime"][19:]
+                        adjustment_two + event["start"]["dateTime"][19:]
                     )
                     service.events().update(
                         calendarId=email, eventId=item["id"], body=event
@@ -192,11 +192,11 @@ HELP_ME_MESSAGE = (
     + ", 'update calendar endtime [name]:[MM/DD/YYY H:m[am/pm]]'"
 )
 
-start_date = datetime.now()
-start_date_est = start_date - timedelta(hours=5)
-start_date_iso = start_date_est.isoformat()
-end_date_est = start_date_est + timedelta(hours=1)
-end_date_iso = end_date_est.isoformat()
+START_DATE = datetime.now()
+START_DATE_EST = START_DATE - timedelta(hours=5)
+START_DATE_ISO = START_DATE_EST.isoformat()
+END_DATE_ISO = START_DATE_EST + timedelta(hours=1)
+END_DATE_ISO = END_DATE_ISO.isoformat()
 
 
 def check_empty_argument(msg, command, message):
@@ -230,7 +230,7 @@ def bot():
             responded = True
         else:
             add_new_todo_to_db_endless(
-                message_body, user_email, start_date_est, datetime.max
+                message_body, user_email, START_DATE_EST, datetime.max
             )
             msg.body(
                 "Inserted: '" + message_body + "' into your todolist with no due date!"
@@ -274,7 +274,7 @@ def bot():
 
     if UPDATE_TODO in incoming_msg:
         if incoming_msg[12:].isnumeric():
-            update_todo(incoming_msg[12:], user_email, start_date_est, end_date_est)
+            update_todo(incoming_msg[12:], user_email, START_DATE_EST, END_DATE_ISO)
             msg.body("Updating todo id " + incoming_msg[12:] + " from your todolist!")
             responded = True
         else:
@@ -295,9 +295,9 @@ def bot():
         else:
             event = {
                 "title": message_body,
-                "start": start_date_iso,
+                "start": START_DATE_ISO,
                 "email": user_email,
-                "end": end_date_iso,
+                "end": END_DATE_ISO,
             }
             add_calendar_event(event)
             msg.body("Added " + message_body + " to your calender")
@@ -541,7 +541,7 @@ def check_reminders(user_email):
         print(reminder_time)
         print(reminder_time < current_est)
         if reminder_time < current_est:
-            message = client.messages.create(
+            message = CLIENT.messages.create(
                 to=person.phone,
                 from_="+16506676737",
                 body="REMINDER: TODO "
@@ -562,9 +562,9 @@ def login(data):
     ''' On client login, authorize/store google auth token then emit google calendar information '''
     auth_code = data["code"]
     http_site = data["http"]
-    GOOGLE_URI = GOOGLE_URI_HTTPS
+    google_uri = GOOGLE_URI_HTTPS
     if http_site:
-        GOOGLE_URI = GOOGLE_URI_HTTP
+        google_uri = GOOGLE_URI_HTTP
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         "client_secret.json",
         scopes=[
@@ -573,7 +573,7 @@ def login(data):
             "https://www.googleapis.com/auth/userinfo.profile",
             "https://www.googleapis.com/auth/calendar",
         ],
-        redirect_uri=GOOGLE_URI,
+        redirect_uri=google_uri,
     )
     flow.fetch_token(code=auth_code)
     cred = flow.credentials
@@ -585,14 +585,14 @@ def login(data):
     profile = requests.get(profileurl)
     profile = profile.json()
     user_email = profile["email"]
-    scheduler.add_job(
+    SCHEDULAR.add_job(
         id="check reminder",
         func=check_reminders,
         kwargs={"user_email": user_email},
         trigger="interval",
         minutes=5,
     )
-    scheduler.start()
+    SCHEDULAR.start()
     flask_socketio.emit("email", {"email": user_email})
     if user_email not in get_all_emails():
         add_new_person_to_db(user_email, cred)
@@ -656,10 +656,10 @@ def send_new_calendar_info(data):
             end_date = curr_month_date.replace(month=end_month)
             end_day = (calendar.monthrange(curr_year, end_month))[1]
             end_date = end_date.replace(day=end_day)
-        print(start_date)
+        print(START_DATE)
         print(end_date)
         result = chf.create_update_all_message(
-            cred, start_date.isoformat(), end_date.isoformat()
+            cred, START_DATE.isoformat(), end_date.isoformat()
         )
         message = {"events": result}
         message_name = "updateAllMonths"
@@ -695,7 +695,7 @@ def add_calendar_event(data):
     print(data)
     service = build("calendar", "v3", credentials=cred)
     calendar = service.calendars().get(calendarId="primary").execute()
-    timeZone = calendar["timeZone"]
+    time_zone = calendar["timeZone"]
     title = data["title"]
     start = data["start"]
     end = data["end"]
@@ -705,11 +705,11 @@ def add_calendar_event(data):
         "description": "",
         "start": {
             "dateTime": start,
-            "timeZone": timeZone,
+            "timeZone": time_zone,
         },
         "end": {
             "dateTime": end,
-            "timeZone": timeZone,
+            "timeZone": time_zone,
         },
         "attendees": [],
         "reminders": {"useDefault": True},
